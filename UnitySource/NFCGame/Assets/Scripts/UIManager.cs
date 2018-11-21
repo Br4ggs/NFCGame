@@ -4,10 +4,13 @@ using UnityEngine;
 
 public class UIManager : MonoBehaviour
 {
-    public int switchToScene;
-
-    public void Activate()
+    public void SwitchScene(int index)
     {
-        AppManager.ManagerInstance.SwitchScene(switchToScene);
+        AppManager.INSTANCE.SwitchScene(index);
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 }

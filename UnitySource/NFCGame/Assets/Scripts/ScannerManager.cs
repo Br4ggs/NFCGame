@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ScannerManager : MonoBehaviour, ManagerComponent
+public class ScannerManager
 {
-    public void Setup()
-    {
-
-    }
+    event OnScanEventHandler OnScanRecievedEvent;
+    delegate void OnScanEventHandler();
 }

@@ -2,26 +2,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class AppManager : MonoBehaviour
 {
-    public static AppManager ManagerInstance { get; private set; }
-    private SceneSwitcher sceneSwitcher;
-    private ScannerManager scannerManager;
+    [Header("Scene transition settings")]
+    public float animationTime;
+    public GameObject transitionPrefab;
+    private GameObject transitionInstance;
+    private Animator animator;
 
-    public PlayerData[] playerData;
+    public static AppManager INSTANCE { get; private set; }
+
+    private ScannerManager scannerManager;
 
     void Awake()
     {
-        if (ManagerInstance == null)
+        if (INSTANCE == null)
         {
             DontDestroyOnLoad(this);
 
-            ManagerInstance = this;
-            sceneSwitcher = gameObject.GetComponent<SceneSwitcher>();
-            scannerManager = gameObject.GetComponent<ScannerManager>();
+            INSTANCE = this;
 
-            Array.ForEach(gameObject.GetComponents<ManagerComponent>(), comp => comp.Setup());
+            SetupTransition();
         }
         else
         {
@@ -29,12 +32,9 @@ public class AppManager : MonoBehaviour
         }
     }
 
-    //perhaps you should make the other components public statics on this one,
-    //that would make this manager more dynamic and would remove the need for wrapper methods
-
     public void SwitchScene(int index)
     {
-        sceneSwitcher.SwitchScene(index);
+        StartCoroutine(SwitchSceneRoutine(index));
     }
 
     public void SubScribeToScanner()
@@ -45,6 +45,33 @@ public class AppManager : MonoBehaviour
     public void UnSubScribeToScanner()
     {
         //stump
+    }
+
+    private void SetupTransition()
+    {
+        transitionInstance = Instantiate(transitionPrefab);
+        animator = transitionInstance.GetComponent<Animator>();
+
+        if (animator == null)
+            Debug.LogAssertion("the transition prefab must have an animator attached to it");
+
+        DontDestroyOnLoad(transitionInstance);
+        transitionInstance.SetActive(false);
+    }
+
+    public IEnumerator SwitchSceneRoutine(int index)
+    {
+        transitionInstance.SetActive(true);
+        animator.Play("TransitionOut");
+        yield return new WaitForSeconds(animationTime);
+        AsyncOperation sceneLoad = SceneManager.LoadSceneAsync(index);
+        while (!sceneLoad.isDone)
+        {
+            yield return null;
+        }
+        animator.Play("TransitionIn");
+        yield return new WaitForSeconds(animationTime);
+        transitionInstance.SetActive(false);
     }
 }
 
