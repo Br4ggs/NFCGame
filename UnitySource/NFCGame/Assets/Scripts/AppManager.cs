@@ -25,6 +25,11 @@ public class AppManager : MonoBehaviour
             INSTANCE = this;
 
             SetupTransition();
+            scannerManager = new ScannerManager();
+
+            //debug
+            //scannerManager.StartReading();
+            //scannerManager.OnScanRecievedEvent += print;
         }
         else
         {
