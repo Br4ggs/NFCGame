@@ -12,12 +12,15 @@ void setup() {
 
 void loop() {
   if(isConnected){
-    if(Serial.available() > 0){
+    Serial.println("IM active!!!!");
+    
+    /*if(Serial.available() > 0){
       String data = Serial.readString();
       data.trim();
       Serial.println(data);
-    }
+    }*/
   }
+  delay(2000);
 }
 
 void WaitUntilConnection(){
@@ -31,5 +34,4 @@ void WaitUntilConnection(){
       }
     }
   }
-  Serial.println("connection has been established");
 }

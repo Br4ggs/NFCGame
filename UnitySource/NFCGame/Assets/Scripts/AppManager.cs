@@ -26,10 +26,6 @@ public class AppManager : MonoBehaviour
 
             SetupTransition();
             scannerManager = new ScannerManager();
-
-            //debug
-            //scannerManager.StartReading();
-            //scannerManager.OnScanRecievedEvent += print;
         }
         else
         {
@@ -42,14 +38,9 @@ public class AppManager : MonoBehaviour
         StartCoroutine(SwitchSceneRoutine(index));
     }
 
-    public void SubScribeToScanner()
+    private void OnDestroy()
     {
-        //stump
-    }
-
-    public void UnSubScribeToScanner()
-    {
-        //stump
+        scannerManager.Dispose();
     }
 
     private void SetupTransition()
