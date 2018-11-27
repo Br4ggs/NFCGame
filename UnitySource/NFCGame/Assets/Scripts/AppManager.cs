@@ -30,8 +30,8 @@ public class AppManager : MonoBehaviour
             INSTANCE = this;
 
             SetupTransition();
-            scannerManager = new ScannerManager();
-            scannerManager.OnDataRecieved += DataRecieved;
+            //scannerManager = new ScannerManager();
+            //scannerManager.OnDataRecieved += DataRecieved;
 
             //LoadResourceData();
         }
