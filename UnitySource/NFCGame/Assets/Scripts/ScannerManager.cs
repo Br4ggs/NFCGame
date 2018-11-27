@@ -17,6 +17,8 @@ public class ScannerManager : IDisposable
     int timeOutRate = 3000;
     SerialPort serialPort;
 
+    public event OnDataRecievedHandler OnDataRecieved;
+    public delegate void OnDataRecievedHandler(string data);
 
     //searching and reading and (re)searching can be efficiently done on one thread instead of 2!
     private Thread readingThread;
@@ -29,27 +31,20 @@ public class ScannerManager : IDisposable
     {
         readData = false;
         state = ConnectionState.SEARCHING;
+
+        //should be done on reading thread
         searchingThread = new Thread(FindPort);
         searchingThread.Start();
     }
 
-    public void StartReading()
+    /// <summary>
+    /// Debug Method for spoofing incoming NFC data
+    /// </summary>
+    /// <param name="data">the data to spoof</param>
+    public void TriggerOnDataRecieved(string data)
     {
-        readData = true;
-        readingThread = new Thread(ThreadLoop);
-        readingThread.Start();
-    }
-
-    public void StopReading()
-    {
-        readData = false;
-    }
-
-    private void OnDataRecieved(string Json)
-    {
-        //convert data and call event here
-        Debug.Log("DATA WAS RECIEVED FROM SERIAL");
-        Debug.Log(Json);
+        //OnDataRecieved(data);
+        serialPort.WriteLine(data);
     }
 
     private void OnConnectionEstablished()

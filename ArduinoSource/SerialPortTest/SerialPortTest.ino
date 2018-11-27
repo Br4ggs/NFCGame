@@ -12,13 +12,13 @@ void setup() {
 
 void loop() {
   if(isConnected){
-    Serial.println("IM active!!!!");
+    //Serial.println("IM active!!!!");
     
-    /*if(Serial.available() > 0){
+    if(Serial.available() > 0){
       String data = Serial.readString();
       data.trim();
       Serial.println(data);
-    }*/
+    }
   }
   delay(2000);
 }

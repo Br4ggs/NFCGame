@@ -6,6 +6,10 @@ using UnityEngine.SceneManagement;
 
 public class AppManager : MonoBehaviour
 {
+    [Header("Resource settings")]
+    public string characterDataPath;
+    public string abilityDataPath;
+
     [Header("Scene transition settings")]
     public float animationTime;
     public GameObject transitionPrefab;
@@ -13,8 +17,9 @@ public class AppManager : MonoBehaviour
     private Animator animator;
 
     public static AppManager INSTANCE { get; private set; }
+    public ScannerManager scannerManager { get; private set; }
 
-    private ScannerManager scannerManager;
+    private Dictionary<int, CharacterData> characterData;
 
     void Awake()
     {
@@ -26,11 +31,20 @@ public class AppManager : MonoBehaviour
 
             SetupTransition();
             scannerManager = new ScannerManager();
+            scannerManager.OnDataRecieved += DataRecieved;
+
+            //LoadResourceData();
         }
         else
         {
             Destroy(this.gameObject);
         }
+    }
+
+    public void DataRecieved(string data)
+    {
+        Debug.Log("DATA WAS RECIEVED FROM SERIAL");
+        Debug.Log(data);
     }
 
     public void SwitchScene(int index)
@@ -41,6 +55,16 @@ public class AppManager : MonoBehaviour
     private void OnDestroy()
     {
         scannerManager.Dispose();
+    }
+
+    private void LoadResourceData()
+    {
+        CharacterData[] data = Resources.LoadAll<CharacterData>(characterDataPath);
+        
+        foreach(CharacterData obj in data)
+        {
+            characterData.Add(obj.dataID, obj);
+        }
     }
 
     private void SetupTransition()
@@ -69,12 +93,6 @@ public class AppManager : MonoBehaviour
         yield return new WaitForSeconds(animationTime);
         transitionInstance.SetActive(false);
     }
-}
-
-public enum AppState
-{
-    InGame,
-    InMenu
 }
 
 public struct PlayerData
