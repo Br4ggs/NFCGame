@@ -8,6 +8,6 @@ public class NFCSpoofer : MonoBehaviour
 
     public void SpoofNFCData()
     {
-        AppManager.INSTANCE.scannerManager.TriggerOnDataRecieved(dataToSend);
+        AppManager.INSTANCE.scannerManager.WriteLine(dataToSend);
     }
 }

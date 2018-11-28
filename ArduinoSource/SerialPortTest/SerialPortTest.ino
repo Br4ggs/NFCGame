@@ -1,7 +1,6 @@
 // constants
 String establishedConnectionKey = "setup";
 String waitForConnectionKey = "setConnection";
-char endOfMessage = '#';
 
 float timeout = 1000;
 float baudrate = 9600;
@@ -17,18 +16,10 @@ void setup() {
 }
 
 void loop() {
-  /*if(isConnected){
-    //Serial.println("IM active!!!!");
-    
-    if(Serial.available() > 0){
-      String data = Serial.readStringUntil('\n');
-      data.trim();
-      Serial.println(data);
-    }
-  }*/
 }
 
 void serialEvent(){
+  //currently only implementation, for when data is spoofed
   if(Serial.available() > 0){
     String data = Serial.readStringUntil('\n');
     data.trim();

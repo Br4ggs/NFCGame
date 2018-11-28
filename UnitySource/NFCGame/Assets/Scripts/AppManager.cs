@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 public class AppManager : MonoBehaviour
 {
@@ -19,7 +21,10 @@ public class AppManager : MonoBehaviour
     public static AppManager INSTANCE { get; private set; }
     public ScannerManager scannerManager { get; private set; }
 
-    private Dictionary<int, CharacterData> characterData;
+    public event OnValidJsonRecievedHandler OnValidJsonRecieved;
+    public delegate void OnValidJsonRecievedHandler(object sender, JObject e);
+
+    public Dictionary<int, PlayerData> characterData;
 
     void Awake()
     {
@@ -30,10 +35,7 @@ public class AppManager : MonoBehaviour
             INSTANCE = this;
 
             SetupTransition();
-            //scannerManager = new ScannerManager();
-            //scannerManager.OnDataRecieved += DataRecieved;
-
-            //LoadResourceData();
+            scannerManager = new ScannerManager();
         }
         else
         {
@@ -41,10 +43,25 @@ public class AppManager : MonoBehaviour
         }
     }
 
+    void Update()
+    {
+        if (scannerManager.DataInRecievedQueue())
+            DataRecieved(scannerManager.ReadLine());
+    }
+
     public void DataRecieved(string data)
     {
-        Debug.Log("DATA WAS RECIEVED FROM SERIAL");
-        Debug.Log(data);
+        try
+        {
+            JObject o = JObject.Parse(data);
+            Debug.Log("json was fully parsed");
+            OnValidJsonRecieved(this, o);
+        }
+        catch(JsonReaderException)
+        {
+            Debug.Log("string was something else");
+            Debug.Log(data);
+        }
     }
 
     public void SwitchScene(int index)
@@ -54,17 +71,8 @@ public class AppManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        scannerManager.Dispose();
-    }
-
-    private void LoadResourceData()
-    {
-        CharacterData[] data = Resources.LoadAll<CharacterData>(characterDataPath);
-        
-        foreach(CharacterData obj in data)
-        {
-            characterData.Add(obj.dataID, obj);
-        }
+        if (scannerManager != null)
+            scannerManager.Dispose();
     }
 
     private void SetupTransition()
@@ -97,8 +105,11 @@ public class AppManager : MonoBehaviour
 
 public struct PlayerData
 {
-    public int MaxHealth;
-    public int CurrentHealth;
-    public int CurrentActionPoints;
-    public int VictoryPoints;
+    public string name;
+    public string description;
+    public int maxHealth;
+    public int currentHealth;
+    public int maxAbilityPoints;
+    public int currentAbilityPoints;
+    public int victoryPoints;
 }

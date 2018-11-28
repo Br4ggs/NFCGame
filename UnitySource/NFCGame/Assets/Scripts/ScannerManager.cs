@@ -20,11 +20,11 @@ public class ScannerManager : IDisposable
     private Thread readingThread;
     private SerialPort serialPort;
     private Queue<string> linesToWrite = new Queue<string>();
+    private Queue<string> linesRecieved = new Queue<string>();
 
+    //create property for this
+    //and create event for when this changes
     private ConnectionState state;
-
-    public event OnDataRecievedHandler OnDataRecieved;
-    public delegate void OnDataRecievedHandler(string data);
 
     public ScannerManager()
     {
@@ -33,16 +33,36 @@ public class ScannerManager : IDisposable
     }
 
     /// <summary>
-    /// Debug Method for spoofing incoming NFC data
+    /// Enqueues a string of data to be send as one line via serial
     /// </summary>
-    /// <param name="data">the data to spoof</param>
-    public void TriggerOnDataRecieved(string data)
+    /// <param name="data">The data to send</param>
+    public void WriteLine(string data)
     {
-        //can be done on separate thread
         lock (linesToWrite)
         {
             linesToWrite.Enqueue(data);
         }
+    }
+
+    /// <summary>
+    /// Reads and dequeues a line of data that was recieved via serial
+    /// </summary>
+    /// <returns>the recieved line of data, returns null if the queue is empty</returns>
+    public string ReadLine()
+    {
+        if (linesRecieved.Count < 1)
+            return null;
+
+        lock (linesRecieved)
+        {
+            string data = linesRecieved.Dequeue();
+            return data;
+        }
+    }
+
+    public bool DataInRecievedQueue()
+    {
+        return (linesRecieved.Count > 0);
     }
 
     private void FindPort()
@@ -106,9 +126,6 @@ public class ScannerManager : IDisposable
 
     private void ThreadLoop()
     {
-        //check if serial port has been defined
-        //if not call FindPort()
-
         if (serialPort == null)
             FindPort();
 
@@ -126,17 +143,20 @@ public class ScannerManager : IDisposable
                 }
 
                 //cannot use bytestoread so we're just gonna have to expect an exception each time
-                //maybe its better to put this data in a queue
                 string data = serialPort.ReadLine();
-                Debug.Log(data);
 
                 //in case arduino gets accidentally reset on use
-                /*if(data == waitForConnectionKey)
+                if(data == waitForConnectionKey)
                 {
                     Debug.Log("resetti");
                     serialPort.WriteLine(establishedConnectionKey);
+                    continue;
                 }
-                OnDataRecieved(data.ToString());*/
+
+                lock (linesRecieved)
+                {
+                    linesRecieved.Enqueue(data);
+                }
             }
             catch (TimeoutException)
             {
