@@ -24,7 +24,7 @@ public class AppManager : MonoBehaviour
     public event OnValidJsonRecievedHandler OnValidJsonRecieved;
     public delegate void OnValidJsonRecievedHandler(object sender, JObject e);
 
-    public Dictionary<int, PlayerData> characterData;
+    public List<PlayerData> characterData = new List<PlayerData>();
 
     void Awake()
     {
