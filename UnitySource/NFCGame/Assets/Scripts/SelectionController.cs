@@ -8,7 +8,6 @@ using Newtonsoft.Json.Linq;
 public class SelectionController : MonoBehaviour
 {
     public GameObject[] playerProfiles;
-    private int currentSelectingPlayer;
 
 	void OnEnable ()
     {
@@ -18,8 +17,6 @@ public class SelectionController : MonoBehaviour
         }
         AppManager.INSTANCE.scannerManager.Active = true;
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
-        currentSelectingPlayer = 0;
-
 	}
 
     void OnDisable()
