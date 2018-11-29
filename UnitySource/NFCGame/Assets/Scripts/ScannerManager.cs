@@ -26,6 +26,8 @@ public class ScannerManager : IDisposable
     //and create event for when this changes
     private ConnectionState state;
 
+    public bool Active;
+
     public ScannerManager()
     {
         readingThread = new Thread(ThreadLoop);
@@ -63,6 +65,14 @@ public class ScannerManager : IDisposable
     public bool DataInRecievedQueue()
     {
         return (linesRecieved.Count > 0);
+    }
+
+    public void DiscardRecievedQueue()
+    {
+        lock (linesRecieved)
+        {
+            linesRecieved.Clear();
+        }
     }
 
     private void FindPort()
@@ -131,12 +141,16 @@ public class ScannerManager : IDisposable
 
         while (state == ConnectionState.CONNECTED)
         {
+            if (!Active)
+                continue;
+
             try
             {
                 while(linesToWrite.Count > 0)
                 {
                     lock (linesToWrite)
                     {
+
                         string message = linesToWrite.Dequeue();
                         serialPort.WriteLine(message);
                     }

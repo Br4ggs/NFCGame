@@ -8,10 +8,6 @@ using Newtonsoft.Json.Linq;
 
 public class AppManager : MonoBehaviour
 {
-    [Header("Resource settings")]
-    public string characterDataPath;
-    public string abilityDataPath;
-
     [Header("Scene transition settings")]
     public float animationTime;
     public GameObject transitionPrefab;
@@ -36,6 +32,7 @@ public class AppManager : MonoBehaviour
 
             SetupTransition();
             scannerManager = new ScannerManager();
+            scannerManager.Active = true;
         }
         else
         {
@@ -54,13 +51,11 @@ public class AppManager : MonoBehaviour
         try
         {
             JObject o = JObject.Parse(data);
-            Debug.Log("json was fully parsed");
             OnValidJsonRecieved(this, o);
         }
         catch(JsonReaderException)
         {
-            Debug.Log("string was something else");
-            Debug.Log(data);
+            //do nothing for now
         }
     }
 
@@ -81,7 +76,10 @@ public class AppManager : MonoBehaviour
         animator = transitionInstance.GetComponent<Animator>();
 
         if (animator == null)
+        {
             Debug.LogAssertion("the transition prefab must have an animator attached to it");
+            return;
+        }
 
         DontDestroyOnLoad(transitionInstance);
         transitionInstance.SetActive(false);
@@ -89,6 +87,9 @@ public class AppManager : MonoBehaviour
 
     public IEnumerator SwitchSceneRoutine(int index)
     {
+        scannerManager.Active = false;
+        scannerManager.DiscardRecievedQueue();
+
         transitionInstance.SetActive(true);
         animator.Play("TransitionOut");
         yield return new WaitForSeconds(animationTime);
@@ -103,7 +104,7 @@ public class AppManager : MonoBehaviour
     }
 }
 
-public struct PlayerData
+public class PlayerData
 {
     public string name;
     public string description;
@@ -112,4 +113,14 @@ public struct PlayerData
     public int maxAbilityPoints;
     public int currentAbilityPoints;
     public int victoryPoints;
+}
+
+public struct AbilityData
+{
+    public string name;
+    public string description;
+    public int damage;
+    public bool canDamageMultiple;
+    public int heals;
+    public int pointCost;
 }

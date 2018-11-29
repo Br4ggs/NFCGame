@@ -16,6 +16,7 @@ public class SelectionController : MonoBehaviour
         {
             playerProfile.SetActive(false);
         }
+        AppManager.INSTANCE.scannerManager.Active = true;
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
         currentSelectingPlayer = 0;
 
@@ -28,9 +29,13 @@ public class SelectionController : MonoBehaviour
 
     void OnDataRecievedHandler(object sender, JObject e)
     {
-        PlayerData data = new PlayerData();
+        if (e.GetValue("typeOf").ToString() != "Character")
+        {
+            Debug.LogAssertion("incorrect card type was played");
+            return;
+        }
 
-        data.name = e.GetValue("name").Value<string>();
+        PlayerData data = e.ToObject<PlayerData>();
         AddCharacter(data);
     }
 
