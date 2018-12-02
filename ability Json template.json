@@ -1,1 +1,11 @@
-{"typeOf":"Ability","name":"TestName","description":"TestDescription","damage":15,"canDamageMultiple":false,"heals":0,"pointCost":2}
+
+
+{"typeOf":"Ability","name":"Big hit","description":"Does 15 damage to a player","damage":15,"canDamageMultiple":false,"heals":0,"pointCost":4}
+
+{"typeOf":"Ability","name":"Multiple","description":"Damages multiple players 3 damage","damage":3,"canDamageMultiple":true,"heals":0,"pointCost":2}
+
+{"typeOf":"Ability","name":"Single","description":"Damages one player 6 damage","damage":6,"canDamageMultiple":false,"heals":0,"pointCost":2}
+
+{"typeOf":"Ability","name":"Heal","description":"Heals user 3 health","damage":0,"canDamageMultiple":false,"heals":3,"pointCost":2}
+
+{"typeOf":"Ability","name":"Drain","description":"Heals user 3 health and damages a player 3 damage","damage":3,"canDamageMultiple":false,"heals":3,"pointCost":4}

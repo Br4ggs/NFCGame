@@ -103,24 +103,3 @@ public class AppManager : MonoBehaviour
         transitionInstance.SetActive(false);
     }
 }
-
-public class PlayerData
-{
-    public string name;
-    public string description;
-    public int maxHealth;
-    public int currentHealth;
-    public int maxAbilityPoints;
-    public int currentAbilityPoints;
-    public int victoryPoints;
-}
-
-public struct AbilityData
-{
-    public string name;
-    public string description;
-    public int damage;
-    public bool canDamageMultiple;
-    public int heals;
-    public int pointCost;
-}
