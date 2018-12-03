@@ -33,7 +33,9 @@ public class SelectionController : MonoBehaviour
         }
 
         PlayerData data = e.ToObject<PlayerData>();
-        AddCharacter(data);
+
+        if(AppManager.INSTANCE.characterData.Count < 4)
+            AddCharacter(data);
     }
 
     void AddCharacter(PlayerData data)
