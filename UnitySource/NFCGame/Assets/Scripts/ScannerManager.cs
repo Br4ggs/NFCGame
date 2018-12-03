@@ -24,14 +24,60 @@ public class ScannerManager : IDisposable
 
     //create property for this
     //and create event for when this changes
-    private ConnectionState state;
+    public delegate void OnConnectionStateChangedHandler(object sender, ConnectionState newState);
+    public event OnConnectionStateChangedHandler OnConnectionStateChanged;
 
-    public bool Active;
+    private ConnectionState state = ConnectionState.DISCONNECTED;
+    public ConnectionState State
+    {
+        get
+        {
+            return state;
+        }
+        set
+        {
+            if(state != value)
+            {
+                state = value;
+                OnConnectionStateChanged(this, state);
+            }
+
+        }
+    }
+
+    private bool active = false;
+    public bool Active
+    {
+        get
+        {
+            return active;
+        }
+        set
+        {
+            active = value;
+
+            if (active)
+            {
+                if (serialPort == null)
+                {
+                    state = ConnectionState.CONNECTED;
+                    readingThread = new Thread(ThreadLoop);
+                    readingThread.Start();
+                }
+            }
+            else
+            {
+                state = ConnectionState.DISCONNECTED;
+                serialPort = null;
+                DiscardRecievedQueue();
+            }
+        }
+    }
 
     public ScannerManager()
     {
-        readingThread = new Thread(ThreadLoop);
-        readingThread.Start();
+        //readingThread = new Thread(ThreadLoop);
+        //readingThread.Start();
     }
 
     /// <summary>
@@ -77,7 +123,7 @@ public class ScannerManager : IDisposable
 
     private void FindPort()
     {
-        state = ConnectionState.SEARCHING;
+        State = ConnectionState.SEARCHING;
 
         while (state == ConnectionState.SEARCHING)
         {
@@ -108,7 +154,7 @@ public class ScannerManager : IDisposable
                     {
                         Debug.Log("the correct port was found");
                         stream.WriteLine(establishedConnectionKey);
-                        state = ConnectionState.CONNECTED;
+                        State = ConnectionState.CONNECTED;
                         portname = port;
                         serialPort = stream;
                         return;
@@ -141,9 +187,6 @@ public class ScannerManager : IDisposable
 
         while (state == ConnectionState.CONNECTED)
         {
-            if (!Active)
-                continue;
-
             try
             {
                 while(linesToWrite.Count > 0)
@@ -197,7 +240,7 @@ public class ScannerManager : IDisposable
     {
         Debug.Log("disposing");
 
-        state = ConnectionState.DISPOSING;
+        State = ConnectionState.DISPOSING;
 
         if(readingThread != null)
             readingThread.Abort();
@@ -211,5 +254,6 @@ public enum ConnectionState
 {
     SEARCHING,
     CONNECTED,
+    DISCONNECTED,
     DISPOSING
 }

@@ -14,6 +14,9 @@ public class AppManager : MonoBehaviour
     private GameObject transitionInstance;
     private Animator animator;
 
+    private bool showPopup;
+    private GameObject scannerPopup;
+
     public static AppManager INSTANCE { get; private set; }
     public ScannerManager scannerManager { get; private set; }
 
@@ -31,8 +34,10 @@ public class AppManager : MonoBehaviour
             INSTANCE = this;
 
             SetupTransition();
+            scannerPopup = transform.Find("ScannerPopup").gameObject;
+
             scannerManager = new ScannerManager();
-            scannerManager.Active = true;
+            scannerManager.OnConnectionStateChanged += ConnectionStateHandler;
         }
         else
         {
@@ -44,6 +49,8 @@ public class AppManager : MonoBehaviour
     {
         if (scannerManager.DataInRecievedQueue())
             DataRecieved(scannerManager.ReadLine());
+
+        scannerPopup.SetActive(showPopup);
     }
 
     public void DataRecieved(string data)
@@ -101,5 +108,17 @@ public class AppManager : MonoBehaviour
         animator.Play("TransitionIn");
         yield return new WaitForSeconds(animationTime);
         transitionInstance.SetActive(false);
+    }
+
+    public void ConnectionStateHandler(object sender, ConnectionState e)
+    {
+        if(e == ConnectionState.SEARCHING)
+        {
+            showPopup = true;
+        }
+        else
+        {
+            showPopup = false;
+        }
     }
 }
