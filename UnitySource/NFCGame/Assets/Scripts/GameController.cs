@@ -22,6 +22,7 @@ public class GameController : MonoBehaviour
     private int currentPlayer;
     private int currentRound;
     private AbilityData currentData;
+    private bool dialogUp;
 
     /// <summary>
     /// setup
@@ -32,6 +33,7 @@ public class GameController : MonoBehaviour
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
 
         choiceDialog.DeactivateDialogBox();
+        dialogUp = false;
 
         currentPlayer = 0;
         characterUIControllers[currentPlayer].HighLighted = true;
@@ -49,13 +51,14 @@ public class GameController : MonoBehaviour
                 data.victoryPoints = 0;
                 data.lives = 3;
                 data.isAlive = true;
+                AppManager.INSTANCE.characterData[i] = data;
 
                 characterUIControllers[i].UpdateUI(data);
-                AppManager.INSTANCE.characterData[i] = data;
             }
         }
 
         roundText.text = currentRound.ToString("D2");
+        EndUpdate();
     }
 
     /// <summary>
@@ -63,7 +66,9 @@ public class GameController : MonoBehaviour
     /// </summary>
     void OnDisable()
     {
+        AppManager.INSTANCE.scannerManager.Active = false;
         AppManager.INSTANCE.OnValidJsonRecieved -= OnDataRecievedHandler;
+        AppManager.INSTANCE.characterData.Clear();
     }
 
     /// <summary>
@@ -71,27 +76,38 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void NextRound()
     {
-        characterUIControllers[currentPlayer].HighLighted = false;
-        currentPlayer = 0;
-        characterUIControllers[currentPlayer].HighLighted = true;
-
-        currentRound++;
-        roundText.text = currentRound.ToString("D2");
-
-        //update player values
-
-        //update ui
-        EndUpdate();
-
         int numOfActivePlayers = 0;
-        foreach(PlayerData player in AppManager.INSTANCE.characterData)
+        foreach (PlayerData player in AppManager.INSTANCE.characterData)
         {
             if (player.isAlive)
                 numOfActivePlayers++;
         }
 
         if (numOfActivePlayers < 2)
+        {
             Debug.Log("GAME IS OVER");
+            AppManager.INSTANCE.SwitchScene(0);
+        }
+
+        characterUIControllers[currentPlayer].HighLighted = false;
+        currentPlayer = 0;
+        if (!AppManager.INSTANCE.characterData[currentPlayer].isAlive)
+            NextPlayer();
+
+        characterUIControllers[currentPlayer].HighLighted = true;
+
+        currentRound++;
+        roundText.text = currentRound.ToString("D2");
+
+        //update player values
+        foreach(PlayerData character in AppManager.INSTANCE.characterData)
+        {
+            if(character.isAlive)
+                character.currentAbilityPoints = character.maxAbilityPoints;
+        }
+
+        //update ui
+        EndUpdate();
     }
 
     /// <summary>
@@ -99,10 +115,6 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void NextPlayer()
     {
-        //check if current player has no health left and is on their last life
-        //if so mark them for death
-        //else mark them knocked down
-
         characterUIControllers[currentPlayer].HighLighted = false;
 
         if(currentPlayer + 1 >= AppManager.INSTANCE.characterData.Count)
@@ -112,7 +124,14 @@ public class GameController : MonoBehaviour
         else
         {
             currentPlayer++;
+            if (!AppManager.INSTANCE.characterData[currentPlayer].isAlive)
+            {
+                NextPlayer();
+                return;
+            }
+
             characterUIControllers[currentPlayer].HighLighted = true;
+            EndUpdate();
         }
     }
 
@@ -124,6 +143,8 @@ public class GameController : MonoBehaviour
     void OnDataRecievedHandler(object sender, JObject e)
     {
         Debug.Log("a card was played");
+        if (dialogUp)
+            return;
 
         if (e.GetValue("typeOf").ToString() != "Ability")
         {
@@ -132,19 +153,26 @@ public class GameController : MonoBehaviour
         }
 
         currentData = e.ToObject<AbilityData>();
+        PlayerData currentPlayerData = AppManager.INSTANCE.characterData[currentPlayer];
 
-        if(AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints < currentData.pointCost)
+        if (currentPlayerData.currentAbilityPoints < currentData.pointCost)
         {
             Debug.LogWarning("you do not have enough points left to play this card");
             return;
         }
 
-        AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints -= currentData.pointCost;
-
-        //move to endaction
-        characterUIControllers[currentPlayer].UpdateUI(AppManager.INSTANCE.characterData[currentPlayer]);
+        currentPlayerData.currentAbilityPoints -= currentData.pointCost;
         
-        //register other changes of card via parser?
+        if(currentData.heals > 0)
+        {
+
+            if (currentPlayerData.currentHealth + currentData.heals > currentPlayerData.maxHealth)
+                currentPlayerData.currentHealth = currentPlayerData.maxHealth;
+            else
+                currentPlayerData.currentHealth += currentData.heals;
+        }
+
+        AppManager.INSTANCE.characterData[currentPlayer] = currentPlayerData;
 
         if (currentData.damage > 0)
         {
@@ -158,6 +186,7 @@ public class GameController : MonoBehaviour
             }
 
             choiceDialog.ActivateDialogBox(currentData.canDamageMultiple, targetPlayers.ToArray());
+            dialogUp = true;
             return;
         }
 
@@ -167,17 +196,28 @@ public class GameController : MonoBehaviour
         if(AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints <= 0)
             NextPlayer();
     }
+
+    /// <summary>
+    /// called after a user played a card or when it's the next players turn
+    /// </summary>
+    private void EndUpdate()
+    {
+        for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
+        {
+            characterUIControllers[i].UpdateUI(AppManager.INSTANCE.characterData[i]);
+        }
+
+        //check if final player
+    }
     
     public void CloseDamageDialog()
     {
+        dialogUp = false;
         int[] affectedPlayers = choiceDialog.DeactivateDialogBox();
 
         for (int i = 0; i < affectedPlayers.Length; i++)
         {
             DamagePlayer(affectedPlayers[i], currentData.damage);
-
-            //move to endaction
-            characterUIControllers[affectedPlayers[i]].UpdateUI(AppManager.INSTANCE.characterData[affectedPlayers[i]]);
         }
 
         //update ui of players
@@ -187,16 +227,7 @@ public class GameController : MonoBehaviour
             NextPlayer();
     }
 
-
-    /// <summary>
-    /// called after a user played a card or when it's the next players turn
-    /// </summary>
-    private void EndUpdate()
-    {
-
-    }
-
-
+    //change this to damage/heal players?
     private void DamagePlayer(int player, int damage)
     {
         PlayerData data = AppManager.INSTANCE.characterData[player];
@@ -204,10 +235,14 @@ public class GameController : MonoBehaviour
 
         if(data.currentHealth <= 0)
         {
-            data.lives--;
-            if(data.lives <= 0)
-            {
+            AppManager.INSTANCE.characterData[currentPlayer].victoryPoints++;
+
+            if (data.lives - 1 < 0)
                 data.isAlive = false;
+            else
+            {
+                data.lives--;
+                data.currentHealth = data.maxHealth;
             }
         }
 

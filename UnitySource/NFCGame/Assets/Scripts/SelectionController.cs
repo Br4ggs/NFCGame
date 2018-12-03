@@ -21,6 +21,7 @@ public class SelectionController : MonoBehaviour
 
     void OnDisable()
     {
+        AppManager.INSTANCE.scannerManager.Active = false;
         AppManager.INSTANCE.OnValidJsonRecieved -= OnDataRecievedHandler;
     }
 
