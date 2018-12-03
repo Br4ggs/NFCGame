@@ -9,3 +9,7 @@
 {"typeOf":"Ability","name":"Heal","description":"Heals user 3 health","damage":0,"canDamageMultiple":false,"heals":3,"pointCost":2}
 
 {"typeOf":"Ability","name":"Drain","description":"Heals user 3 health and damages a player 3 damage","damage":3,"canDamageMultiple":false,"heals":3,"pointCost":4}
+
+new format:
+
+{"typeOf":"Ability","name":"TestName","description":"TestDescription","pointCost":2,"effects":[{"variable":"varname","change":3,"turns":1,"targets":"targettype"}]}
