@@ -128,7 +128,6 @@ public class ScannerManager : IDisposable
         while (state == ConnectionState.SEARCHING)
         {
             string[] ports = SerialPort.GetPortNames();
-            Debug.Log(ports.Length);
 
             if (ports.Length < 1)
             {

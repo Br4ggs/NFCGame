@@ -94,7 +94,6 @@ public class AppManager : MonoBehaviour
 
     public IEnumerator SwitchSceneRoutine(int index)
     {
-        scannerManager.Active = false;
         scannerManager.DiscardRecievedQueue();
 
         transitionInstance.SetActive(true);
