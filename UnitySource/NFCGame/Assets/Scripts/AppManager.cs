@@ -23,6 +23,9 @@ public class AppManager : MonoBehaviour
     public event OnValidJsonRecievedHandler OnValidJsonRecieved;
     public delegate void OnValidJsonRecievedHandler(object sender, JObject e);
 
+    public event OnDataRecievedHandler OnDataRecieved;
+    public delegate void OnDataRecievedHandler(object sender, string e);
+
     public List<PlayerData> characterData = new List<PlayerData>();
 
     void Awake()
@@ -62,7 +65,7 @@ public class AppManager : MonoBehaviour
         }
         catch(JsonReaderException)
         {
-            //do nothing for now
+            OnDataRecieved(this, data);
         }
     }
 

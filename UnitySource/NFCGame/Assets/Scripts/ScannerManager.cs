@@ -22,8 +22,6 @@ public class ScannerManager : IDisposable
     private Queue<string> linesToWrite = new Queue<string>();
     private Queue<string> linesRecieved = new Queue<string>();
 
-    //create property for this
-    //and create event for when this changes
     public delegate void OnConnectionStateChangedHandler(object sender, ConnectionState newState);
     public event OnConnectionStateChangedHandler OnConnectionStateChanged;
 

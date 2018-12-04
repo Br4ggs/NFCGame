@@ -1,14 +1,32 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 public class ScannerTest : MonoBehaviour
 {
-    public void OnDataRecievedHandler(object sender, JObject e)
+    Text outputTxt;
+    InputField input;
+    NFCSpoofer spoofer;
+
+    void Start()
     {
-        Debug.Log("data was recieved");
+        outputTxt = GameObject.Find("OutputText").GetComponent<Text>();
+        input = GameObject.Find("InputField").GetComponent<InputField>();
+        spoofer = GameObject.Find("Manager").GetComponent<NFCSpoofer>();
+    }
+
+    public void SendText()
+    {
+        spoofer.dataToSend = input.text;
+        spoofer.SpoofNFCData();
+    }
+
+    public void OnDataRecievedHandler(object sender, string e)
+    {
+        outputTxt.text = e;
     }
 
     public void OnToggle(bool value)
@@ -16,12 +34,12 @@ public class ScannerTest : MonoBehaviour
         if (value)
         {
             AppManager.INSTANCE.scannerManager.Active = true;
-            AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
+            AppManager.INSTANCE.OnDataRecieved += OnDataRecievedHandler;
         }
         else
         {
             AppManager.INSTANCE.scannerManager.Active = false;
-            AppManager.INSTANCE.OnValidJsonRecieved -= OnDataRecievedHandler;
+            AppManager.INSTANCE.OnDataRecieved -= OnDataRecievedHandler;
         }
     }
 }
