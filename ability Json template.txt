@@ -12,4 +12,23 @@
 
 new format:
 
-{"typeOf":"Ability","name":"TestName","description":"TestDescription","pointCost":2,"effects":[{"variable":"varname","change":3,"turns":1,"targets":"targettype"}]}
+{
+  "typeOf": "Ability",
+  "name": "TestName",
+  "description": "TestDescription",
+  "pointCost": 2,
+  "effects": [
+    {
+      "targets": "user/enemy/enemies/all",
+      "variableChanges": [
+        {
+          "variable": "health/ability/victory/damage",
+          "type": "additive/multiply",
+          "change": 3,
+          "offset": 0,
+          "turns": 1
+        }
+      ]
+    }
+  ]
+}
