@@ -8,23 +8,10 @@ using UnityEngine;
 
 public class ScannerManager : IDisposable
 {
-    //constants
-    const string establishedConnectionKey = "setup";
-    const string waitForConnectionKey = "setConnection";
+    public event DeviceConnectionStatusChangedHandler OnConnectionStateChanged;
+    public event UartDataReceivedEventHandler OnDataRecieved;
 
-    private string portname;
-    private int baudRate = 9600;
-    private int timeOutRate = 1000;
-
-    //main thread for writing/reading data to serialport
-    private Thread readingThread;
-    private SerialPort serialPort;
-    private Queue<string> linesToWrite = new Queue<string>();
-    private Queue<string> linesRecieved = new Queue<string>();
-
-    public delegate void OnConnectionStateChangedHandler(object sender, ConnectionState newState);
-    public event OnConnectionStateChangedHandler OnConnectionStateChanged;
-
+    private ISerialController serialController;
     private ConnectionState state = ConnectionState.DISCONNECTED;
     public ConnectionState State
     {
@@ -43,39 +30,41 @@ public class ScannerManager : IDisposable
         }
     }
 
-    private bool active = false;
-    public bool Active
+    private bool serialConnectionEnabled = false;
+    public bool SerialConnectionenabled
     {
         get
         {
-            return active;
+            return serialConnectionEnabled;
         }
         set
         {
-            active = value;
+            serialConnectionEnabled = value;
 
-            if (active)
+            if (serialConnectionEnabled)
             {
-                if (serialPort == null)
-                {
-                    state = ConnectionState.CONNECTED;
-                    readingThread = new Thread(ThreadLoop);
-                    readingThread.Start();
-                }
+                serialController.Connect();
             }
             else
             {
-                state = ConnectionState.DISCONNECTED;
-                serialPort = null;
-                DiscardRecievedQueue();
+                serialController.Disconnect();
             }
         }
     }
 
     public ScannerManager()
     {
-        //readingThread = new Thread(ThreadLoop);
-        //readingThread.Start();
+        serialConnectionEnabled = false;
+
+#if UNITY_ANDROID
+        serialController = new NativeUart();
+#endif
+
+#if UNITY_STANDALONE_WIN
+        serialController = new WindowsSerialController();
+#endif
+        serialController.OnDeviceConnectionStatusChanged += OnDeviceStatusChangedHandler;
+        serialController.AutoReconnect = true;
     }
 
     /// <summary>
@@ -84,10 +73,7 @@ public class ScannerManager : IDisposable
     /// <param name="data">The data to send</param>
     public void WriteLine(string data)
     {
-        lock (linesToWrite)
-        {
-            linesToWrite.Enqueue(data);
-        }
+        serialController.SendLine(data);
     }
 
     /// <summary>
@@ -96,161 +82,29 @@ public class ScannerManager : IDisposable
     /// <returns>the recieved line of data, returns null if the queue is empty</returns>
     public string ReadLine()
     {
-        if (linesRecieved.Count < 1)
-            return null;
-
-        lock (linesRecieved)
-        {
-            string data = linesRecieved.Dequeue();
-            return data;
-        }
-    }
-
-    public bool DataInRecievedQueue()
-    {
-        return (linesRecieved.Count > 0);
-    }
-
-    public void DiscardRecievedQueue()
-    {
-        lock (linesRecieved)
-        {
-            linesRecieved.Clear();
-        }
-    }
-
-    private void FindPort()
-    {
-        State = ConnectionState.SEARCHING;
-
-        while (state == ConnectionState.SEARCHING)
-        {
-            string[] ports = SerialPort.GetPortNames();
-
-            if (ports.Length < 1)
-            {
-                Debug.LogWarning("no open ports were found, make sure the arduino is plugged in");
-                Thread.Sleep(2000);
-                continue;
-            }
-
-            foreach (string port in ports)
-            {
-                Debug.Log("attempting connection...");
-                SerialPort stream = new SerialPort();
-                stream.ReadTimeout = timeOutRate;
-                stream.BaudRate = baudRate;
-
-                try
-                {
-                    stream.PortName = port;
-                    stream.Open();
-
-                    string data = stream.ReadLine();
-                    if (data == waitForConnectionKey)
-                    {
-                        Debug.Log("the correct port was found");
-                        stream.WriteLine(establishedConnectionKey);
-                        State = ConnectionState.CONNECTED;
-                        portname = port;
-                        serialPort = stream;
-                        return;
-                    }
-                }
-                catch(IOException)
-                {
-                    Debug.LogWarning("The arduino was unplugged/already in use while trying to establish a connection");
-                    stream.Dispose();
-                }
-                catch (TimeoutException e)
-                {
-                    Debug.LogWarning(e);
-                    stream.Dispose();
-                }      
-                catch(Exception e)
-                {
-                    Debug.LogAssertion(e);
-                }
-            }
-
-            Debug.LogWarning("the arduino could not be found, retrying...");
-        }
-    }
-
-    private void ThreadLoop()
-    {
-        if (serialPort == null)
-            FindPort();
-
-        while (state == ConnectionState.CONNECTED)
-        {
-            try
-            {
-                while(linesToWrite.Count > 0)
-                {
-                    lock (linesToWrite)
-                    {
-
-                        string message = linesToWrite.Dequeue();
-                        serialPort.WriteLine(message);
-                    }
-                }
-
-                //cannot use bytestoread so we're just gonna have to expect an exception each time
-                string data = serialPort.ReadLine();
-
-                //in case arduino gets accidentally reset on use
-                if(data == waitForConnectionKey)
-                {
-                    Debug.Log("resetti");
-                    serialPort.WriteLine(establishedConnectionKey);
-                    continue;
-                }
-
-                lock (linesRecieved)
-                {
-                    linesRecieved.Enqueue(data);
-                }
-            }
-            catch (TimeoutException)
-            {
-                //silently catch the error and do nothing
-            }
-            catch (IOException e)
-            {
-                if(state != ConnectionState.DISPOSING)
-                {
-                    //something went wrong with the port, like an unplug
-                    //try to refind port
-                    Debug.LogWarning(e);
-                    FindPort();
-                }
-            }
-            catch(Exception e)
-            {
-                Debug.LogAssertion(e);
-            }
-        }
+        return serialController.ReadLine();
     }
 
     public void Dispose()
     {
         Debug.Log("disposing");
+        serialController.Dispose();
+    }
 
-        State = ConnectionState.DISPOSING;
-
-        if(readingThread != null)
-            readingThread.Abort();
-
-        if(serialPort != null)
-            serialPort.Dispose();
+    private void OnDeviceStatusChangedHandler(object sender, ConnectionState newState)
+    {
+        State = newState;
     }
 }
 
 public enum ConnectionState
 {
     SEARCHING,
+    DEVICEFOUND,
     CONNECTED,
     DISCONNECTED,
     DISPOSING
 }
+
+public delegate void DeviceConnectionStatusChangedHandler(object sender, ConnectionState newState);
+public delegate void UartDataReceivedEventHandler(string message);

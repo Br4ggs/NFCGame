@@ -50,12 +50,16 @@ public class AppManager : MonoBehaviour
 
     void Update()
     {
-        if (scannerManager.DataInRecievedQueue())
-            DataRecieved(scannerManager.ReadLine());
+        string data = scannerManager.ReadLine();
+        if (data != null)
+            DataRecieved(data);
+
 
         scannerPopup.SetActive(showPopup);
     }
 
+    //this should be moved to scannermanager
+    //with appmanager offering subscribe and unsubscribe methods
     public void DataRecieved(string data)
     {
         try
@@ -97,8 +101,6 @@ public class AppManager : MonoBehaviour
 
     public IEnumerator SwitchSceneRoutine(int index)
     {
-        scannerManager.DiscardRecievedQueue();
-
         transitionInstance.SetActive(true);
         animator.Play("TransitionOut");
         yield return new WaitForSeconds(animationTime);
