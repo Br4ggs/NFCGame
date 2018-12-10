@@ -18,6 +18,15 @@ public interface ISerialController : IDisposable
     }
 
     /// <summary>
+    /// Signifies the current state of the serial controller
+    /// </summary>
+    ConnectionState State
+    {
+        get;
+        set;
+    }
+
+    /// <summary>
     /// Called when the status of the serial controller changes
     /// </summary>
     event DeviceConnectionStatusChangedHandler OnDeviceConnectionStatusChanged;
@@ -25,7 +34,6 @@ public interface ISerialController : IDisposable
     /// <summary>
     /// Establish a connection with the serial device, this will be managed on a newly created thread.
     /// </summary>
-    /// <param name="autoConnect">Should the serial controller try to re-initialize and auto connect if connection is lost?</param>
     void Connect();
 
     /// <summary>

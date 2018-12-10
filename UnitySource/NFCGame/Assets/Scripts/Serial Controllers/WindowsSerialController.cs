@@ -15,6 +15,8 @@ public class WindowsSerialController : ISerialController
     //constants
     private const string establishedConnectionKey = "setup";
     private const string waitForConnectionKey = "setConnection";
+    private const int baudRate = 9600;
+    private const int timeOutRate = 1000;
 
     public event DeviceConnectionStatusChangedHandler OnDeviceConnectionStatusChanged;
 
@@ -22,10 +24,7 @@ public class WindowsSerialController : ISerialController
     private Queue<string> linesRecieved = new Queue<string>();
 
     private Thread managerThread;
-
     private SerialPort serialPort;
-    private int baudRate = 9600;
-    private int timeOutRate = 1000;
 
     private bool autoReconnect = false;
     public bool AutoReconnect
