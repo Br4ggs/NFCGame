@@ -12,7 +12,7 @@ using UnityEngine.UI;
 public class NativeUart : ISerialController
 {
     //constants
-    private const string waitForConnectionKey = "setConnection";
+    private const string establishedConnectionKey = "setup";
     private const int baudRate = 9600;
     private const int watchDogTimeoutRate = 5;
 
@@ -21,8 +21,11 @@ public class NativeUart : ISerialController
     private Queue<string> linesToWrite = new Queue<string>();
     private Queue<string> linesRecieved = new Queue<string>();
 
+    private string readData = null;
     private Thread watchDogThread;
-    int watchDogTimer = 0;
+    private int watchDogTimer = 0;
+
+    private NativeUartRemote remote;
 
 #if UNITY_ANDROID
 	AndroidJavaClass nu;
@@ -61,8 +64,16 @@ public class NativeUart : ISerialController
     }
 
 
-	NativeUart()
+	public NativeUart()
     {
+        GameObject instance = new GameObject();
+        instance.name = "NativeUart";
+        remote = instance.AddComponent<NativeUartRemote>();
+
+        remote.OnUartCallbackState += UartCallbackState;
+        remote.OnUartMessageReceived += UartMessageReceived;
+        remote.OnUpdateWatchDog += UpdateWatchDog;
+
 #if UNITY_ANDROID
 		nu = new AndroidJavaClass ("jp.co.satoshi.uart_plugin.NativeUart");
 		unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"); 
@@ -75,6 +86,14 @@ public class NativeUart : ISerialController
 #if UNITY_ANDROID
         context.Call("runOnUiThread", new AndroidJavaRunnable(() => {
             nu.CallStatic("initialize", context);
+        }));
+#endif
+    }
+
+    public void OnDeviceFound()
+    {
+#if UNITY_ANDROID
+        context.Call("runOnUiThread", new AndroidJavaRunnable(() => {
             nu.CallStatic("connection", baudRate);
         }));
 #endif
@@ -99,19 +118,19 @@ public class NativeUart : ISerialController
         if (linesRecieved.Count < 1)
             return null;
 
-        lock (linesRecieved)
-        {
+        //lock (linesRecieved)
+        //{
             string data = linesRecieved.Dequeue();
             return data;
-        }
+        //}
     }
 
     public void DiscardRecievedQueue()
     {
-        lock (linesRecieved)
-        {
+        //lock (linesRecieved)
+        //{
             linesRecieved.Clear();
-        }
+        //}
     }
 
     public void DiscardToSendQueue()
@@ -121,65 +140,58 @@ public class NativeUart : ISerialController
 
     public void Dispose()
     {
+        State = ConnectionState.DISPOSING;
         Disconnect();
 	}
 
-	/*public void Init(){
-#if UNITY_ANDROID
-		context.Call ("runOnUiThread", new AndroidJavaRunnable(() => {
-			nu.CallStatic("initialize", context);
-		}));
-#endif
-	}*/
-
-
-	/*public void Connection(int boud){
-#if UNITY_ANDROID
-		context.Call ("runOnUiThread", new AndroidJavaRunnable(() => {
-			nu.CallStatic ("connection", boud);
-		}));
-
-        //start up watchdog thread
-        //if this thread counts to zero android reader thread should be declared disconnected
-#endif
-	}*/
-
-	/*public void Send(string msg){
-#if UNITY_ANDROID
-		nu.CallStatic ("send", msg);
-#endif
-	}*/
-
+    /// <summary>
+    /// Called by the java side to signify what state the code is in
+    /// </summary>
+    /// <param name="msg"></param>
 	public void UartCallbackState(string msg)
     {
-		//OnUartState(msg);
+        if (state == ConnectionState.DISPOSING)
+            return;
 
-        //set connectionstate enum
-        
+        switch (msg)
+        {
+            case "SEARCHING":
+                State = ConnectionState.SEARCHING;
+                break;
+
+            case "DEVICEFOUND":
+                State = ConnectionState.DEVICEFOUND;
+                OnDeviceFound();
+                break;
+
+            case "CONNECTED":
+                State = ConnectionState.CONNECTED;
+                SendLine(establishedConnectionKey);
+                DiscardRecievedQueue();
+                readData = null;
+                break;
+
+            case "DISCONNECTED":
+                State = ConnectionState.DISCONNECTED;
+                break;
+        }
 	}
 
-	public void UartCallbackDeviceList(string msg)
-    {
-		//OnUartDeviceList(msg);
-
-        //set connectionstate enum
-	}
-
+    /// <summary>
+    /// Called by the java side when the serial port has recieved data
+    /// </summary>
+    /// <param name="msg">The data that was recieved</param>
 	public void UartMessageReceived(string msg)
     {
-        lock (linesRecieved)
+        readData = readData + msg;
+        if (msg.IndexOf('\n') > -1)
         {
-            linesRecieved.Enqueue(msg);
+            //lock (linesRecieved)
+            //{
+                linesRecieved.Enqueue(readData);
+            //}
+            readData = null;
         }
-        /*readData = readData + msg;
-		if (msg.IndexOf ('\n') > -1) {
-			OnUartMessageReadLine(readData);
-			readData = null;
-		} 
-		OnUartMessageRead (msg);*/
-
-        //add messages to queue
-
 	}
 
     public void UpdateWatchDog(string msg)

@@ -14,11 +14,14 @@ public class AppManager : MonoBehaviour
     private GameObject transitionInstance;
     private Animator animator;
 
-    private bool showPopup;
     private GameObject scannerPopup;
 
     public static AppManager INSTANCE { get; private set; }
     public ScannerManager scannerManager { get; private set; }
+
+    private readonly object stateLock = new object();
+    private bool stateChanged = false;
+    public event DeviceConnectionStatusChangedHandler OnSerialStateChanged;
 
     public event OnValidJsonRecievedHandler OnValidJsonRecieved;
     public delegate void OnValidJsonRecievedHandler(object sender, JObject e);
@@ -41,6 +44,8 @@ public class AppManager : MonoBehaviour
 
             scannerManager = new ScannerManager();
             scannerManager.OnConnectionStateChanged += ConnectionStateHandler;
+
+            OnSerialStateChanged += ShowPopup;
         }
         else
         {
@@ -54,8 +59,16 @@ public class AppManager : MonoBehaviour
         if (data != null)
             DataRecieved(data);
 
+        if (stateChanged)
+        {
+            //lock (stateLock)
+            //{
+                stateChanged = false;
+            //}
 
-        scannerPopup.SetActive(showPopup);
+            ConnectionState newState = scannerManager.State;
+            OnSerialStateChanged(this, newState);
+        }
     }
 
     //this should be moved to scannermanager
@@ -99,7 +112,7 @@ public class AppManager : MonoBehaviour
         transitionInstance.SetActive(false);
     }
 
-    public IEnumerator SwitchSceneRoutine(int index)
+    private IEnumerator SwitchSceneRoutine(int index)
     {
         transitionInstance.SetActive(true);
         animator.Play("TransitionOut");
@@ -114,15 +127,17 @@ public class AppManager : MonoBehaviour
         transitionInstance.SetActive(false);
     }
 
-    public void ConnectionStateHandler(object sender, ConnectionState e)
+    private void ConnectionStateHandler(object sender, ConnectionState e)
     {
-        if(e == ConnectionState.SEARCHING)
-        {
-            showPopup = true;
-        }
-        else
-        {
-            showPopup = false;
-        }
+        //lock (stateLock)
+        //{
+            stateChanged = true;
+        //}
+    }
+
+    private void ShowPopup(object sender, ConnectionState e)
+    {
+        if(scannerManager.SerialConnectionenabled)
+            scannerPopup.SetActive((e != ConnectionState.CONNECTED));
     }
 }
