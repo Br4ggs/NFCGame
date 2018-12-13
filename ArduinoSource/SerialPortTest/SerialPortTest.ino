@@ -1,3 +1,8 @@
+#include <SPI.h>
+#include <SerialCommands.h>
+
+
+
 // constants
 String establishedConnectionKey = "setup";
 String waitForConnectionKey = "setConnection";

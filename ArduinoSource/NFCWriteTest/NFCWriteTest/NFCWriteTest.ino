@@ -13,7 +13,6 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 String debugtxt = "hello this is a text for 34 chars";
 String delimiter = "#";
 
-
 //card constants
 int bufferSize = 34;
 int blocks = 64;
