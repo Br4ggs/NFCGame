@@ -10,13 +10,16 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-String debugtxt = "hello this is a text for 34 chars";
+String debugtxt = "hallo dit is Benno van den Brink";
+//String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"TestName\",\"description\":\"TestDescription\",\"maxHealth\":15,\"maxAbilityPoints\":10}";
 String delimiter = "#";
 
 //card constants
-int bufferSize = 34;
 int blocks = 64;
 byte blockByteSize = 16;
+
+//max buffer size for mifare classic 1k tags
+int bufferSize = 752;
 
 void setup() {
   Serial.begin(9600);
@@ -46,14 +49,15 @@ void loop() {
 
   // write debug text into buffer
   debugtxt.getBytes(buffer, bufferSize);
-  //Serial.println(String((char *)buffer));
+  // fill rest of buffer with whitespace
+  for(int i = debugtxt.length(); i < bufferSize; i++) buffer[i] = ' ';
+
+  Serial.println();
+  for(int i = 0; i < bufferSize; i++) Serial.print((char)buffer[i]); 
 
   MFRC522::StatusCode status = writeToBlocks(&key, buffer, bufferSize);
 }
 
-//for loop through blocks
-//if block is 0, 3 or another block that is occupied skip it
-//if the buffer has been written completely return
 MFRC522::StatusCode writeToBlocks(MFRC522::MIFARE_Key *key, byte *buffer, int len){ 
   /*for(int i = 0; i < len; i++){
       Serial.print((char)buffer[i]);

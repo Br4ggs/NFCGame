@@ -17,14 +17,27 @@ byte blockByteSize = 16;
 // max buffer size for mifare classic 1k tags
 int bufferSize = 752;
 
-void setup() {
-  Serial.begin(9600);
+// constants
+String establishedConnectionKey = "setup";
+String waitForConnectionKey = "setConnection";
+
+float timeout = 1000;
+float baudrate = 9600;
+
+bool isConnected;
+
+void setup(){
+  Serial.begin(baudrate);
+  Serial.setTimeout(timeout);
+
   SPI.begin();
   mfrc522.PCD_Init();
-  Serial.println("Initialized");
+  
+  isConnected = false;
+  WaitUntilConnection();
 }
 
-void loop() {
+void loop(){
   // generate the key
   MFRC522::MIFARE_Key key;
   for(byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
@@ -36,34 +49,50 @@ void loop() {
     return;
   }
 
-  Serial.println("**Card found**");
-
   byte buffer[bufferSize];
-
   MFRC522::StatusCode status = readFromBlocks(&key, buffer);
 
   if(status != MFRC522::STATUS_OK){
-    Serial.print(F("Writing operation failed: "));
     Serial.println(mfrc522.GetStatusCodeName(status));
     return;
   } 
 
-  Serial.println();
-  for(int i = 0; i < bufferSize; i++) Serial.print((char)buffer[i]); 
+  String data((char*)buffer);
+  data.trim();
+  Serial.println(data); 
+}
+
+// Callback function for resending spoofed data
+void serialEvent(){
+  if(Serial.available() > 0){
+    String data = Serial.readStringUntil('\n');
+    data.trim();
+    Serial.println(data);
+  }
+}
+
+void WaitUntilConnection(){
+  Serial.println(waitForConnectionKey);
+  while(!isConnected){
+    if(Serial.available() > 0){
+      String data = Serial.readStringUntil('\n');
+      data.trim();
+      if(data == establishedConnectionKey){
+        isConnected = true;
+      }
+    }
+  }
 }
 
 MFRC522::StatusCode readFromBlocks(MFRC522::MIFARE_Key *key, byte *buffer){
-
   MFRC522::StatusCode status;
   int trailerBlock = 3;
   int bufferSector = 0;  
   byte len = 18;
 
-  for(int block = 1; block < blocks; block++){    
-    //Serial.println("**Block " + String(block) + "**");    
+  for(int block = 1; block < blocks; block++){       
     if(block == trailerBlock){
       trailerBlock += 4;
-      //Serial.println("skipping trailer block...");
       continue;
     }
  
@@ -72,22 +101,16 @@ MFRC522::StatusCode readFromBlocks(MFRC522::MIFARE_Key *key, byte *buffer){
     //////////////////////////////////////
     status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, key, &(mfrc522.uid));
     if(!status == MFRC522::STATUS_OK){
-      //Serial.print(F("PCD_Authenticate() failed: "));
-      //Serial.println(mfrc522.GetStatusCodeName(status));
       break;
     }
-    //else Serial.println(F("PCD_Authenticate() success: "));
 
     //////////////////////////////////////
     //         read from block          //
     //////////////////////////////////////
     status = mfrc522.MIFARE_Read(block, &buffer[bufferSector], &len);
     if (status != MFRC522::STATUS_OK) {
-      //Serial.print(F("Reading failed: "));
-      //Serial.println(mfrc522.GetStatusCodeName(status));
       break;
     }
-    //else Serial.println(F("PCD_Authenticate() success: "));
 
     bufferSector += 16;
     if(bufferSector > bufferSize) break;
