@@ -16,6 +16,7 @@ using Newtonsoft.Json.Linq;
 public class GameController : MonoBehaviour
 {
     public DamageDialog choiceDialog;
+    public PopupDialog popupMessage;
     public FlatCharUIController[] characterUIControllers;
     public Text roundText;
 
@@ -29,10 +30,11 @@ public class GameController : MonoBehaviour
     /// </summary>
     void Start()
     {
-        Debug.Log("test");
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
 
         choiceDialog.DeactivateDialogBox();
+        popupMessage.gameObject.SetActive(false);
+
         dialogUp = false;
 
         currentPlayer = 0;
@@ -141,13 +143,13 @@ public class GameController : MonoBehaviour
     /// <param name="e"></param>
     void OnDataRecievedHandler(object sender, JObject e)
     {
-        Debug.Log("a card was played");
         if (dialogUp)
             return;
 
         if (e.GetValue("typeOf").ToString() != "Ability")
         {
-            Debug.LogAssertion("incorrect card type was played");
+            popupMessage.ShowDialog("An incorrect card type was played.");
+            dialogUp = true;
             return;
         }
 
@@ -156,7 +158,8 @@ public class GameController : MonoBehaviour
 
         if (currentPlayerData.currentAbilityPoints < currentData.pointCost)
         {
-            Debug.LogWarning("you do not have enough points left to play this card");
+            popupMessage.ShowDialog("You do not have enough points left to play this card");
+            dialogUp = true;
             return;
         }
 
@@ -164,7 +167,6 @@ public class GameController : MonoBehaviour
         
         if(currentData.heals > 0)
         {
-
             if (currentPlayerData.currentHealth + currentData.heals > currentPlayerData.maxHealth)
                 currentPlayerData.currentHealth = currentPlayerData.maxHealth;
             else
@@ -184,7 +186,7 @@ public class GameController : MonoBehaviour
                     targetPlayers.Add(i);
             }
 
-            choiceDialog.ActivateDialogBox(currentData.canDamageMultiple, targetPlayers.ToArray());
+            choiceDialog.ActivateDialogBox(currentData.canDamageMultiple, targetPlayers.ToArray(), currentData.name, currentData.description);
             dialogUp = true;
             return;
         }
@@ -224,6 +226,12 @@ public class GameController : MonoBehaviour
 
         if (AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints <= 0)
             NextPlayer();
+    }
+
+    public void ClosePopupDialog()
+    {
+        dialogUp = false;
+        popupMessage.gameObject.SetActive(false);
     }
 
     //change this to damage/heal players?

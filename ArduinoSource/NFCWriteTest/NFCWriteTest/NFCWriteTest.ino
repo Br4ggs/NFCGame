@@ -11,9 +11,8 @@
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
 //String debugtxt = "hallo dit is Benno van den Brink";
-//String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"TestName\",\"description\":\"TestDescription\",\"maxHealth\":15,\"maxAbilityPoints\":10}";
-String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Big hit\",\"description\":\"Does 15 damage to a player\",\"damage\":15,\"canDamageMultiple\":false,\"heals\":0,\"pointCost\":4}";
-String delimiter = "#";
+//String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"Kroax Rasa\",\"description\":\"Quick and nimble fighter who's quick on his toes, but more fragile than others.\",\"maxHealth\":12,\"maxAbilityPoints\":5}";
+String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Blink dagger\",\"description\":\"Pick a space in a line up to 4 spaces away and teleport to there. If an enemy is in that space deal 2 damage to that enemy.\",\"damage\":2,\"canDamageMultiple\":false,\"heals\":0,\"pointCost\":5}";
 
 //card constants
 int blocks = 64;
