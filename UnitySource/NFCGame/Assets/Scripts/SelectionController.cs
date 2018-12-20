@@ -15,7 +15,6 @@ public class SelectionController : MonoBehaviour
         {
             playerProfile.SetActive(false);
         }
-        AppManager.INSTANCE.scannerManager.SerialConnectionenabled = true;
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
 	}
 

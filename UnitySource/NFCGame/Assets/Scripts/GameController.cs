@@ -29,7 +29,7 @@ public class GameController : MonoBehaviour
     /// </summary>
     void Start()
     {
-        AppManager.INSTANCE.scannerManager.SerialConnectionenabled = true;
+        Debug.Log("test");
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
 
         choiceDialog.DeactivateDialogBox();
@@ -66,7 +66,6 @@ public class GameController : MonoBehaviour
     /// </summary>
     void OnDisable()
     {
-        AppManager.INSTANCE.scannerManager.SerialConnectionenabled = false;
         AppManager.INSTANCE.OnValidJsonRecieved -= OnDataRecievedHandler;
         AppManager.INSTANCE.characterData.Clear();
     }

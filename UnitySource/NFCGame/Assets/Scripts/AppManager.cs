@@ -19,7 +19,7 @@ public class AppManager : MonoBehaviour
     public static AppManager INSTANCE { get; private set; }
     public ScannerManager scannerManager { get; private set; }
 
-    private readonly object stateLock = new object();
+    //private readonly object stateLock = new object();
     private bool stateChanged = false;
     public event DeviceConnectionStatusChangedHandler OnSerialStateChanged;
 
@@ -78,11 +78,13 @@ public class AppManager : MonoBehaviour
         try
         {
             JObject o = JObject.Parse(data);
-            OnValidJsonRecieved(this, o);
+            if(OnValidJsonRecieved != null)
+                OnValidJsonRecieved(this, o);
         }
         catch(JsonReaderException)
         {
-            OnDataRecieved(this, data);
+            if(OnDataRecieved != null)
+                OnDataRecieved(this, data);
         }
     }
 
@@ -137,7 +139,6 @@ public class AppManager : MonoBehaviour
 
     private void ShowPopup(object sender, ConnectionState e)
     {
-        if(scannerManager.SerialConnectionenabled)
-            scannerPopup.SetActive((e != ConnectionState.CONNECTED));
+        scannerPopup.SetActive((e != ConnectionState.CONNECTED));
     }
 }

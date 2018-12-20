@@ -26,7 +26,6 @@ public class ScannerManager : IDisposable
                 state = value;
                 OnConnectionStateChanged(this, state);
             }
-
         }
     }
 
@@ -39,22 +38,21 @@ public class ScannerManager : IDisposable
         }
         set
         {
-            serialConnectionEnabled = value;
+            if (serialConnectionEnabled != value)
+            {
+                serialConnectionEnabled = value;
 
-            if (serialConnectionEnabled)
-            {
-                serialController.Connect();
-            }
-            else
-            {
-                serialController.Disconnect();
+                if(serialConnectionEnabled)
+                    serialController.Connect();
+
+                else
+                    serialController.Disconnect();
             }
         }
     }
 
     public ScannerManager()
     {
-        serialConnectionEnabled = false;
 
 #if UNITY_ANDROID
         serialController = new NativeUart();
@@ -65,6 +63,7 @@ public class ScannerManager : IDisposable
 #endif
         serialController.OnDeviceConnectionStatusChanged += OnDeviceStatusChangedHandler;
         serialController.AutoReconnect = true;
+        SerialConnectionenabled = true;
     }
 
     /// <summary>

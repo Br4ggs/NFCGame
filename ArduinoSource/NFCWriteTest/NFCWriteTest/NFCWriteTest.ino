@@ -10,8 +10,9 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-String debugtxt = "hallo dit is Benno van den Brink";
+//String debugtxt = "hallo dit is Benno van den Brink";
 //String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"TestName\",\"description\":\"TestDescription\",\"maxHealth\":15,\"maxAbilityPoints\":10}";
+String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Big hit\",\"description\":\"Does 15 damage to a player\",\"damage\":15,\"canDamageMultiple\":false,\"heals\":0,\"pointCost\":4}";
 String delimiter = "#";
 
 //card constants

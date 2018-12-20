@@ -40,13 +40,11 @@ public class ScannerTest : MonoBehaviour
     {
         if (value)
         {
-            AppManager.INSTANCE.scannerManager.SerialConnectionenabled = true;
             AppManager.INSTANCE.OnDataRecieved += OnDataRecievedHandler;
             AppManager.INSTANCE.OnSerialStateChanged += OnConnectionStatusChangedHandler;
         }
         else
         {
-            AppManager.INSTANCE.scannerManager.SerialConnectionenabled = false;
             AppManager.INSTANCE.OnDataRecieved -= OnDataRecievedHandler;
             AppManager.INSTANCE.OnSerialStateChanged -= OnConnectionStatusChangedHandler;
         }

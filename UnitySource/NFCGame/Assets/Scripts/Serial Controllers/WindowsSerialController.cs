@@ -16,7 +16,7 @@ public class WindowsSerialController : ISerialController
     private const string establishedConnectionKey = "setup";
     private const string waitForConnectionKey = "setConnection";
     private const int baudRate = 9600;
-    private const int timeOutRate = 1000;
+    private const int timeOutRate = 6000;
 
     public event DeviceConnectionStatusChangedHandler OnDeviceConnectionStatusChanged;
 
@@ -65,6 +65,8 @@ public class WindowsSerialController : ISerialController
     public void Disconnect()
     {
         State = ConnectionState.DISCONNECTED;
+        managerThread.Abort();
+        managerThread = null;
     }
 
     public void SendLine(string message)
@@ -221,6 +223,7 @@ public class WindowsSerialController : ISerialController
             catch (TimeoutException)
             {
                 //silently catch the error and do nothing
+                Debug.Log("timeout");
             }
             catch (IOException e)
             {
@@ -238,7 +241,6 @@ public class WindowsSerialController : ISerialController
                         State = ConnectionState.DISCONNECTED;
                         return;
                     }
-
                 }
             }
             catch (Exception e)
