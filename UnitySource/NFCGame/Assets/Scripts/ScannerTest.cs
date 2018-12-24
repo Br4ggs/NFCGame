@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 public class ScannerTest : MonoBehaviour
 {
@@ -18,6 +19,9 @@ public class ScannerTest : MonoBehaviour
         outputTxt = GameObject.Find("OutputText").GetComponent<Text>();
         input = GameObject.Find("InputField").GetComponent<InputField>();
         spoofer = GameObject.Find("Manager").GetComponent<NFCSpoofer>();
+
+        AppManager.INSTANCE.OnValidJsonRecieved += OnJsonRecievedHandler;
+        AppManager.INSTANCE.OnSerialStateChanged += OnConnectionStatusChangedHandler;
     }
 
     public void SendText()
@@ -31,6 +35,11 @@ public class ScannerTest : MonoBehaviour
         outputTxt.text = e;
     }
 
+    public void OnJsonRecievedHandler(object sender, JObject e)
+    {
+        outputTxt.text = e.ToString();
+    }
+
     public void OnConnectionStatusChangedHandler(object sender, ConnectionState e)
     {
         connectionStatusText.text = e.ToString();
@@ -40,13 +49,15 @@ public class ScannerTest : MonoBehaviour
     {
         if (value)
         {
-            AppManager.INSTANCE.OnDataRecieved += OnDataRecievedHandler;
-            AppManager.INSTANCE.OnSerialStateChanged += OnConnectionStatusChangedHandler;
+            //AppManager.INSTANCE.OnDataRecieved += OnDataRecievedHandler;
+            //AppManager.INSTANCE.OnValidJsonRecieved += OnJsonRecievedHandler;
+            //AppManager.INSTANCE.OnSerialStateChanged += OnConnectionStatusChangedHandler;
         }
         else
         {
-            AppManager.INSTANCE.OnDataRecieved -= OnDataRecievedHandler;
-            AppManager.INSTANCE.OnSerialStateChanged -= OnConnectionStatusChangedHandler;
+            //AppManager.INSTANCE.OnDataRecieved -= OnDataRecievedHandler;
+            //AppManager.INSTANCE.OnValidJsonRecieved -= OnJsonRecievedHandler;
+            //AppManager.INSTANCE.OnSerialStateChanged -= OnConnectionStatusChangedHandler;
         }
     }
 }
