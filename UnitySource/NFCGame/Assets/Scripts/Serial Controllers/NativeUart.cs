@@ -21,6 +21,9 @@ public class NativeUart : ISerialController
     private Queue<string> linesToWrite = new Queue<string>();
     private Queue<string> linesRecieved = new Queue<string>();
 
+    //since there is currently a problem with the first data being random parts of the arduino/device handshake,
+    //this bool ensures that the first recieved data gets wiped.
+    private bool discardedFirstMessage = false;
     private string readData = null;
     private Thread watchDogThread;
     private int watchDogTimer = 0;
@@ -167,8 +170,6 @@ public class NativeUart : ISerialController
             case "CONNECTED":
                 State = ConnectionState.CONNECTED;
                 SendLine(establishedConnectionKey);
-                DiscardRecievedQueue();
-                readData = null;
                 break;
 
             case "DISCONNECTED":
@@ -183,6 +184,12 @@ public class NativeUart : ISerialController
     /// <param name="msg">The data that was recieved</param>
 	public void UartMessageReceived(string msg)
     {
+        if (!discardedFirstMessage)
+        {
+            msg = "";
+            discardedFirstMessage = true;
+        }
+
         readData = readData + msg;
         if (msg.IndexOf('\n') > -1)
         {
@@ -198,6 +205,6 @@ public class NativeUart : ISerialController
     public void UpdateWatchDog(string msg)
     {
         //reset watchdog timer
-        Debug.Log("watchdog is triggered");
+        //Debug.Log("watchdog is triggered");
     }
 }
