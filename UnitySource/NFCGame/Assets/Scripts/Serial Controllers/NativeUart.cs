@@ -189,6 +189,7 @@ public class NativeUart : ISerialController
             //lock (linesRecieved)
             //{
                 linesRecieved.Enqueue(readData);
+                Debug.Log("data is: " + readData);
             //}
             readData = null;
         }
@@ -197,5 +198,6 @@ public class NativeUart : ISerialController
     public void UpdateWatchDog(string msg)
     {
         //reset watchdog timer
+        Debug.Log("watchdog is triggered");
     }
 }
