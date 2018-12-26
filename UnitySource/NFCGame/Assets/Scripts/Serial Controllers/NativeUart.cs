@@ -25,9 +25,9 @@ public class NativeUart : ISerialController
     //this bool ensures that the first recieved data gets wiped.
     private bool discardedFirstMessage = false;
     private string readData = null;
-    private Thread watchDogThread;
-    private int watchDogTimer = 0;
-    private int maxWatchDogTime = 3000;
+    //private Thread watchDogThread;
+    //private int watchDogTimer = 0;
+    //private int maxWatchDogTime = 3;
 
     private NativeUartRemote remote;
 
@@ -122,23 +122,18 @@ public class NativeUart : ISerialController
         if (linesRecieved.Count < 1)
             return null;
 
-        //lock (linesRecieved)
-        //{
-            string data = linesRecieved.Dequeue();
-            return data;
-        //}
+        string data = linesRecieved.Dequeue();
+        return data;
     }
 
     public void DiscardRecievedQueue()
     {
-        //lock (linesRecieved)
-        //{
-            linesRecieved.Clear();
-        //}
+        linesRecieved.Clear();
     }
 
     public void DiscardToSendQueue()
     {
+        //do nothing, this serialcontroller doesnt have a tosend queue
         throw new System.NotImplementedException();
     }
 
@@ -146,10 +141,12 @@ public class NativeUart : ISerialController
     {
         State = ConnectionState.DISPOSING;
         Disconnect();
+
+        //dont forget to stop watchdog thread
 	}
 
     /// <summary>
-    /// Called by the java side to signify what state the code is in
+    /// Called by the java side to signify what state the program is in
     /// </summary>
     /// <param name="msg"></param>
 	public void UartCallbackState(string msg)
@@ -171,6 +168,8 @@ public class NativeUart : ISerialController
             case "CONNECTED":
                 State = ConnectionState.CONNECTED;
                 SendLine(establishedConnectionKey);
+                //watchDogThread = new Thread(WatchDogLoop);
+                //watchDogThread.Start();
                 break;
 
             case "DISCONNECTED":
@@ -194,23 +193,47 @@ public class NativeUart : ISerialController
         readData = readData + msg;
         if (msg.IndexOf('\n') > -1)
         {
-            //lock (linesRecieved)
-            //{
-                linesRecieved.Enqueue(readData);
-                Debug.Log("data is: " + readData);
-            //}
+            linesRecieved.Enqueue(readData);
+            Debug.Log("data is: " + readData);
             readData = null;
         }
 	}
 
+    /// <summary>
+    /// called when the java side lost connectivity
+    /// </summary>
+    /// <param name="msg"></param>
     public void UpdateWatchDog(string msg)
     {
-        //reset watchdog timer
-        //Debug.Log("watchdog is triggered");
+        Debug.LogAssertion("trigger timeout");
+        State = ConnectionState.DISCONNECTED;
     }
 
-    private void WatchDogLoop()
+    /*private void WatchDogLoop()
     {
+        Debug.LogWarning("watchdog thread has started");
 
-    }
+        bool test = true;
+        while(state == ConnectionState.CONNECTED)
+        {
+            if (watchDogTimer >= maxWatchDogTime)
+            {
+                Debug.LogAssertion("trigger watchdog timeout");
+                State = ConnectionState.DISCONNECTED;
+            }
+            else
+            {
+                if(test)
+                    Debug.Log("watchdog timer is: " + watchDogTimer);
+                else
+                    Debug.LogAssertion("watchdog timer is: " + watchDogTimer);
+
+                test = !test;
+                watchDogTimer++;
+                Thread.Sleep(1000);
+            }
+        }
+
+        Debug.LogWarning("watchdog thread has ended");
+    }*/
 }
