@@ -27,6 +27,7 @@ public class NativeUart : ISerialController
     private string readData = null;
     private Thread watchDogThread;
     private int watchDogTimer = 0;
+    private int maxWatchDogTime = 3000;
 
     private NativeUartRemote remote;
 
@@ -206,5 +207,10 @@ public class NativeUart : ISerialController
     {
         //reset watchdog timer
         //Debug.Log("watchdog is triggered");
+    }
+
+    private void WatchDogLoop()
+    {
+
     }
 }

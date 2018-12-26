@@ -25,6 +25,7 @@ public class VRDebugConsole : MonoBehaviour
     {
         Application.logMessageReceivedThreaded += LogCallback;
         Application.quitting += () => isQuitting = true;
+        DontDestroyOnLoad(this);
         Debug.Log("ui logger is initialized");
 	}
 
