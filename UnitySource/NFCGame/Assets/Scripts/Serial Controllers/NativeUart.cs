@@ -96,6 +96,7 @@ public class NativeUart : ISerialController
 
     public void OnDeviceFound()
     {
+        Debug.Log("calling connect");
 #if UNITY_ANDROID
         context.Call("runOnUiThread", new AndroidJavaRunnable(() => {
             nu.CallStatic("connection", baudRate);
@@ -151,6 +152,8 @@ public class NativeUart : ISerialController
     /// <param name="msg"></param>
 	public void UartCallbackState(string msg)
     {
+        Debug.LogWarning(msg);
+
         if (state == ConnectionState.DISPOSING)
             return;
 
@@ -207,33 +210,14 @@ public class NativeUart : ISerialController
     {
         Debug.LogAssertion("trigger timeout");
         State = ConnectionState.DISCONNECTED;
-    }
+        Disconnect();
 
-    /*private void WatchDogLoop()
-    {
-        Debug.LogWarning("watchdog thread has started");
-
-        bool test = true;
-        while(state == ConnectionState.CONNECTED)
+        if (autoReconnect)
         {
-            if (watchDogTimer >= maxWatchDogTime)
-            {
-                Debug.LogAssertion("trigger watchdog timeout");
-                State = ConnectionState.DISCONNECTED;
-            }
-            else
-            {
-                if(test)
-                    Debug.Log("watchdog timer is: " + watchDogTimer);
-                else
-                    Debug.LogAssertion("watchdog timer is: " + watchDogTimer);
-
-                test = !test;
-                watchDogTimer++;
-                Thread.Sleep(1000);
-            }
+            Thread.Sleep(3000);
+            Debug.Log("trying reconnect");
+            discardedFirstMessage = false;
+            Connect();
         }
-
-        Debug.LogWarning("watchdog thread has ended");
-    }*/
+    }
 }
