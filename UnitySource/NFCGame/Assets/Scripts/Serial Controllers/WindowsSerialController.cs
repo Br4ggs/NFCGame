@@ -170,6 +170,7 @@ public class WindowsSerialController : ISerialController
             }
 
             Debug.LogWarning("the arduino could not be found, retrying...");
+            Thread.Sleep(500);
         }
     }
 

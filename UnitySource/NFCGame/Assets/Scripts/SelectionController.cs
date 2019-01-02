@@ -11,10 +11,11 @@ public class SelectionController : MonoBehaviour
 
 	void OnEnable ()
     {
-        foreach(GameObject playerProfile in playerProfiles)
+        foreach (GameObject playerProfile in playerProfiles)
         {
             playerProfile.SetActive(false);
         }
+        AppManager.INSTANCE.characterData.Clear();
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
 	}
 

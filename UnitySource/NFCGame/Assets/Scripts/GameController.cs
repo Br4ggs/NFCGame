@@ -69,7 +69,6 @@ public class GameController : MonoBehaviour
     void OnDisable()
     {
         AppManager.INSTANCE.OnValidJsonRecieved -= OnDataRecievedHandler;
-        AppManager.INSTANCE.characterData.Clear();
     }
 
     /// <summary>
@@ -87,7 +86,7 @@ public class GameController : MonoBehaviour
         if (numOfActivePlayers < 2)
         {
             Debug.Log("GAME IS OVER");
-            AppManager.INSTANCE.SwitchScene(0);
+            AppManager.INSTANCE.SwitchScene(4);
         }
 
         characterUIControllers[currentPlayer].HighLighted = false;
@@ -257,6 +256,7 @@ public class GameController : MonoBehaviour
     }
 }
 
+[System.Serializable]
 public class PlayerData
 {
     public string name;
