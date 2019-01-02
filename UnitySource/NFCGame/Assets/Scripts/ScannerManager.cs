@@ -6,12 +6,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Wrapper-class which takes care of serial communication for different platforms
+/// </summary>
 public class ScannerManager : IDisposable
 {
+    /// <summary>
+    /// Event that gets triggered when the serialController changes state
+    /// NOTE: since this event is often called from the reading thread, IT IS NOT THREAD SAFE!
+    /// callback methods that subscribe to this should folow a dispatcher pattern.
+    /// </summary>
     public event DeviceConnectionStatusChangedHandler OnConnectionStateChanged;
-    public event UartDataReceivedEventHandler OnDataRecieved;
 
     private ISerialController serialController;
+
     private ConnectionState state = ConnectionState.DISCONNECTED;
     public ConnectionState State
     {
