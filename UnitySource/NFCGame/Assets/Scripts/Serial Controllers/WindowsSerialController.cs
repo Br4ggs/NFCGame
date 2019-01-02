@@ -223,7 +223,6 @@ public class WindowsSerialController : ISerialController
             catch (TimeoutException)
             {
                 //silently catch the error and do nothing
-                Debug.Log("timeout");
             }
             catch (IOException e)
             {

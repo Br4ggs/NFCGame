@@ -8,6 +8,8 @@ using UnityEngine.UI;
 /// </summary>
 public class VRDebugConsole : MonoBehaviour
 {
+    public static VRDebugConsole INSTANCE { get; private set; }
+
     public Color logColor;
     public Color warningColor;
     public Color assertionColor;
@@ -23,10 +25,20 @@ public class VRDebugConsole : MonoBehaviour
 
 	void Awake ()
     {
-        Application.logMessageReceivedThreaded += LogCallback;
-        Application.quitting += () => isQuitting = true;
-        DontDestroyOnLoad(this);
-        Debug.Log("ui logger is initialized");
+        if(INSTANCE == null)
+        {
+            INSTANCE = this;
+            DontDestroyOnLoad(this);
+            Application.logMessageReceivedThreaded += LogCallback;
+            Application.quitting += () => isQuitting = true;
+
+            Debug.Log("ui logger is initialized");
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+
 	}
 
     void Update()
