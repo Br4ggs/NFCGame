@@ -10,7 +10,6 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-//String debugtxt = "hallo dit is Benno van den Brink";
 //String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"Kroax Rasa\",\"description\":\"Quick and nimble fighter who's quick on his toes, but more fragile than others.\",\"maxHealth\":12,\"maxAbilityPoints\":5}";
 String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Blink dagger\",\"description\":\"Pick a space in a line up to 4 spaces away and teleport to there. If an enemy is in that space deal 2 damage to that enemy.\",\"damage\":2,\"canDamageMultiple\":false,\"heals\":0,\"pointCost\":5}";
 
@@ -46,11 +45,15 @@ void loop() {
   Serial.println("**Card found**");
   
   byte buffer[bufferSize];
-
+  
   // write debug text into buffer
   debugtxt.getBytes(buffer, bufferSize);
+
+  // add a null terminator to end of string
+  buffer[debugtxt.length()] = '\0';
+  
   // fill rest of buffer with whitespace
-  for(int i = debugtxt.length(); i < bufferSize; i++) buffer[i] = ' ';
+  for(int i = (debugtxt.length() + 1); i < bufferSize; i++) buffer[i] = ' ';
 
   Serial.println();
   for(int i = 0; i < bufferSize; i++) Serial.print((char)buffer[i]); 

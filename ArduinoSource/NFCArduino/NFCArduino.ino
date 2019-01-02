@@ -58,7 +58,7 @@ void loop(){
   } 
 
   String data((char*)buffer);
-  data.trim();
+  //data.trim();
   Serial.println(data); 
 }
 
@@ -112,6 +112,13 @@ MFRC522::StatusCode readFromBlocks(MFRC522::MIFARE_Key *key, byte *buffer){
       break;
     }
 
+    for(int i = bufferSector; i < (bufferSector + 16); i++){
+      char test = (char)buffer[i];
+      if(test == '\0'){
+        break;
+      }
+    }
+    
     bufferSector += 16;
     if(bufferSector > bufferSize) break;
   }

@@ -17,7 +17,7 @@ public class AppManager : MonoBehaviour
     private GameObject scannerPopup;
 
     public static AppManager INSTANCE { get; private set; }
-    public ScannerManager scannerManager { get; private set; }
+    private ScannerManager scannerManager;
 
     private bool stateChanged = false;
     /// <summary>
@@ -79,6 +79,11 @@ public class AppManager : MonoBehaviour
     public void SwitchScene(int index)
     {
         StartCoroutine(SwitchSceneRoutine(index));
+    }
+
+    public void SendMessageToSerial(string msg)
+    {
+        scannerManager.WriteLine(msg);
     }
 
     private void DataRecieved(string data)
