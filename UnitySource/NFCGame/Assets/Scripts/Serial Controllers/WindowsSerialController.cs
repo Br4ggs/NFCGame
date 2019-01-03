@@ -16,7 +16,7 @@ public class WindowsSerialController : ISerialController
     private const string establishedConnectionKey = "setup";
     private const string waitForConnectionKey = "setConnection";
     private const int baudRate = 9600;
-    private const int timeOutRate = 6000;
+    private const int timeOutRate = 3000;
 
     public event DeviceConnectionStatusChangedHandler OnDeviceConnectionStatusChanged;
 

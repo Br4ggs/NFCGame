@@ -10,8 +10,8 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-//String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"Kroax Rasa\",\"description\":\"Quick and nimble fighter who's quick on his toes, but more fragile than others.\",\"maxHealth\":12,\"maxAbilityPoints\":5}";
-String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Blink dagger\",\"description\":\"Pick a space in a line up to 4 spaces away and teleport to there. If an enemy is in that space deal 2 damage to that enemy.\",\"damage\":2,\"canDamageMultiple\":false,\"heals\":0,\"pointCost\":5}";
+String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"Krodha\",\"description\":\"A strong bezerker who deals alot of damage in exchange for movement.\",\"maxHealth\":15,\"maxAbilityPoints\":5}";
+//String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Mending salve\",\"description\":\"Heal yourself for 2 HP.\",\"damage\":0,\"canDamageMultiple\":false,\"heals\":2,\"pointCost\":3}";
 
 //card constants
 int blocks = 64;
