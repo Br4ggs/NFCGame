@@ -1,0 +1,77 @@
+{
+  "typeOf": "Ability",
+  "name": "Sub1fromEach",
+  "description": "This ability is meant for testing, It subtracts one of each variables of multiple enemies, and buffs each of the players stats",
+  "pointCost": 1,
+  "effects": [
+    {
+      "targets": "enemy",
+      "targetsMultiple": "multiple",
+      "variableChanges": [
+        {
+          "variable": "health",
+          "type": "additive",
+          "change": -1,
+          "offset": 0,
+          "turns": 1
+        },
+        {
+          "variable": "ability",
+          "type": "additive",
+          "change": -1,
+          "offset": 0,
+          "turns": 1
+        },
+        {
+          "variable": "victory",
+          "type": "additive",
+          "change": -1,
+          "offset": 0,
+          "turns": 1
+        },
+        {
+          "variable": "damage",
+          "type": "additive",
+          "change": -1,
+          "offset": 0,
+          "turns": 1
+        }
+      ]
+    },
+
+    {
+      "targets": "user",
+      "targetsMultiple": "one",
+      "variableChanges": [
+        {
+          "variable": "health",
+          "type": "additive",
+          "change": 1,
+          "offset": 0,
+          "turns": 1
+        },
+        {
+          "variable": "ability",
+          "type": "additive",
+          "change": 1,
+          "offset": 0,
+          "turns": 1
+        },
+        {
+          "variable": "victory",
+          "type": "additive",
+          "change": 1,
+          "offset": 0,
+          "turns": 1
+        },
+        {
+          "variable": "damage",
+          "type": "additive",
+          "change": 1,
+          "offset": 0,
+          "turns": 1
+        }
+      ]
+    }
+  ]
+}
