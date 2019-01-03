@@ -1,75 +1,74 @@
 {
-  "typeOf": "Ability",
+  "type": "Ability",
   "name": "Sub1fromEach",
-  "description": "This ability is meant for testing, It subtracts one of each variables of multiple enemies, and buffs each of the players stats",
-  "pointCost": 1,
-  "effects": [
+  "desc": "Subtracts one of each vars of multiple foes, and buffs each of the players vars",
+  "ptCst": 1,
+  "fx": [
     {
-      "targets": "enemy",
-      "targetsMultiple": "multiple",
-      "variableChanges": [
+      "trgts": "enemy",
+      "trgtType": "multiple",
+      "varchng": [
         {
-          "variable": "health",
+          "var": "health",
           "type": "additive",
-          "change": -1,
-          "offset": 0,
-          "turns": 1
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
         },
         {
-          "variable": "ability",
+          "var": "ability",
           "type": "additive",
-          "change": -1,
-          "offset": 0,
-          "turns": 1
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
         },
         {
-          "variable": "victory",
+          "var": "victory",
           "type": "additive",
-          "change": -1,
-          "offset": 0,
-          "turns": 1
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
         },
         {
-          "variable": "damage",
+          "var": "damage",
           "type": "additive",
-          "change": -1,
-          "offset": 0,
-          "turns": 1
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
         }
       ]
     },
 
     {
-      "targets": "user",
-      "targetsMultiple": "one",
+      "trgts": "user",
       "variableChanges": [
         {
-          "variable": "health",
+          "var": "health",
           "type": "additive",
-          "change": 1,
-          "offset": 0,
-          "turns": 1
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
         },
         {
-          "variable": "ability",
+          "var": "ability",
           "type": "additive",
-          "change": 1,
-          "offset": 0,
-          "turns": 1
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
         },
         {
-          "variable": "victory",
+          "var": "victory",
           "type": "additive",
-          "change": 1,
-          "offset": 0,
-          "turns": 1
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
         },
         {
-          "variable": "damage",
+          "var": "damage",
           "type": "additive",
-          "change": 1,
-          "offset": 0,
-          "turns": 1
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
         }
       ]
     }
