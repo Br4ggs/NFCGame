@@ -19,6 +19,7 @@ public class GameController : MonoBehaviour
     public PopupDialog popupMessage;
     public FlatCharUIController[] characterUIControllers;
     public Text roundText;
+    public List<VariableChange> registeredEffects = new List<VariableChange>();
 
     private int currentPlayer;
     private int currentRound;
@@ -145,14 +146,21 @@ public class GameController : MonoBehaviour
         if (dialogUp)
             return;
 
-        if (e.GetValue("typeOf").ToString() != "Ability")
+        if (e.GetValue("type").ToString() != "Ability")
         {
             popupMessage.ShowDialog("An incorrect card type was played.");
             dialogUp = true;
             return;
         }
+        JArray fxArray = (JArray)e.GetValue("fx");
+        StartCoroutine(ParseCoroutine(fxArray));
 
-        currentData = e.ToObject<AbilityData>();
+        //send json to card parser
+        //card parser returns list of variables that have/need to be changed
+        //change variables if not already
+        //send data to ui elements
+
+        /*currentData = e.ToObject<AbilityData>();
         PlayerData currentPlayerData = AppManager.INSTANCE.characterData[currentPlayer];
 
         if (currentPlayerData.currentAbilityPoints < currentData.pointCost)
@@ -195,6 +203,7 @@ public class GameController : MonoBehaviour
 
         if(AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints <= 0)
             NextPlayer();
+        */
     }
 
     /// <summary>
@@ -254,6 +263,58 @@ public class GameController : MonoBehaviour
 
         AppManager.INSTANCE.characterData[player] = data;
     }
+
+    private IEnumerator ParseCoroutine(JArray effects)
+    {
+        //loop through the effects
+        //get targets based on "targets" and "targetsmultiple"
+        //(after damage prompt) register all changes
+        //if offset of varchange is greater than 0, add it to dictionary
+        //if turns of varchange is greater greater than 1 add it to dictionary
+        //register changes in ui
+        foreach (JToken effect in effects)
+        {
+            JObject effectObj = effect.ToObject<JObject>();
+            string target = effectObj.GetValue("trgts").ToString();
+            JArray varChanges = (JArray)effectObj.GetValue("varchng");
+
+            if(target == "user") //skip the targeting step
+            {
+                //apply var changes to player
+                //OR: create variablechange instance for var change
+                foreach(JToken varChange in varChanges)
+                {
+                    JObject varChangeObj = varChange.ToObject<JObject>();
+
+                    VariableChange changeData = new VariableChange();
+                    changeData.player = currentPlayer;
+                    changeData.change = int.Parse(varChangeObj.GetValue("chng").ToString());
+                    changeData.offset = int.Parse(varChangeObj.GetValue("offst").ToString());
+                    changeData.turns = int.Parse(varChangeObj.GetValue("trns").ToString());
+                    registeredEffects.Add(changeData);
+                }
+
+                Debug.Log(registeredEffects.Count);
+            }
+
+            if (target != "user")
+            {
+                string targetType = effectObj.GetValue("trgtType").ToString();
+                if(targetType == "multiple" || targetType == "one")
+                {
+                    //show prompt and yield for return
+                    //apply var changes to selected allies/enemies
+                    //OR: create variablechange instance for var change
+                }
+                else
+                {
+                    //apply var changes to all allies/enemies
+                    //OR: create variablechange instance for var change
+                }
+            }
+        }
+        yield return null;
+    }
 }
 
 [System.Serializable]
@@ -279,4 +340,23 @@ public struct AbilityData
     public bool canDamageMultiple;
     public int heals;
     public int pointCost;
+}
+
+[System.Serializable]
+public struct VariableChange
+{
+    public int player;
+    public VarType variable;
+    public bool additive;
+    public int change;
+    public int offset;
+    public int turns;
+}
+
+public enum VarType
+{
+    health,
+    ability,
+    victory,
+    damage
 }
