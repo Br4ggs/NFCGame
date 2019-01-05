@@ -26,6 +26,8 @@ public class GameController : MonoBehaviour
     private AbilityData currentData;
     private bool dialogUp;
 
+    private List<int> affectedPlayers = new List<int>();
+
     /// <summary>
     /// setup
     /// </summary>
@@ -222,9 +224,9 @@ public class GameController : MonoBehaviour
     public void CloseDamageDialog()
     {
         dialogUp = false;
-        int[] affectedPlayers = choiceDialog.DeactivateDialogBox();
+        affectedPlayers.AddRange(choiceDialog.DeactivateDialogBox());
 
-        for (int i = 0; i < affectedPlayers.Length; i++)
+        /*for (int i = 0; i < affectedPlayers.Length; i++)
         {
             DamagePlayer(affectedPlayers[i], currentData.damage);
         }
@@ -233,7 +235,7 @@ public class GameController : MonoBehaviour
         EndUpdate();
 
         if (AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints <= 0)
-            NextPlayer();
+            NextPlayer();*/
     }
 
     public void ClosePopupDialog()
@@ -277,41 +279,57 @@ public class GameController : MonoBehaviour
             JObject effectObj = effect.ToObject<JObject>();
             string target = effectObj.GetValue("trgts").ToString();
             JArray varChanges = (JArray)effectObj.GetValue("varchng");
+            affectedPlayers.Clear();
 
             if(target == "user") //skip the targeting step
             {
-                //apply var changes to player
-                //OR: create variablechange instance for var change
-                foreach(JToken varChange in varChanges)
-                {
-                    JObject varChangeObj = varChange.ToObject<JObject>();
-
-                    VariableChange changeData = new VariableChange();
-                    changeData.player = currentPlayer;
-                    changeData.change = int.Parse(varChangeObj.GetValue("chng").ToString());
-                    changeData.offset = int.Parse(varChangeObj.GetValue("offst").ToString());
-                    changeData.turns = int.Parse(varChangeObj.GetValue("trns").ToString());
-                    registeredEffects.Add(changeData);
-                }
-
-                Debug.Log(registeredEffects.Count);
+                affectedPlayers.Add(currentPlayer);
             }
 
-            if (target != "user")
+            if (target != "user") //won't be implemented for next build
             {
                 string targetType = effectObj.GetValue("trgtType").ToString();
                 if(targetType == "multiple" || targetType == "one")
                 {
-                    //show prompt and yield for return
-                    //apply var changes to selected allies/enemies
-                    //OR: create variablechange instance for var change
+                    List<int> selectablePlayers = new List<int>(new int[] { 0, 1, 2, 3 });
+                    selectablePlayers.Remove(currentPlayer);
+                    choiceDialog.ActivateDialogBox((targetType == "multiple"), selectablePlayers.ToArray(), "test", "this is a test");
+                    dialogUp = true;
+
+                    while (dialogUp)
+                    {
+                        Debug.Log("waiting...");
+                        yield return null;
+                    }
+                    Debug.Log("moving on...");
                 }
                 else
                 {
-                    //apply var changes to all allies/enemies
-                    //OR: create variablechange instance for var change
+                    affectedPlayers.AddRange(new int[] { 0, 1, 2, 3 });
+                    affectedPlayers.Remove(currentPlayer);
                 }
             }
+
+            /*foreach (JToken varChange in varChanges)
+            {
+                JObject varChangeObj = varChange.ToObject<JObject>();
+
+                VariableChange changeData = new VariableChange();
+
+                changeData.player = currentPlayer;
+                changeData.additive = varChangeObj.GetValue("type").ToString() == "additive";
+                changeData.change = int.Parse(varChangeObj.GetValue("chng").ToString());
+                changeData.offset = int.Parse(varChangeObj.GetValue("offst").ToString());
+                changeData.turns = int.Parse(varChangeObj.GetValue("trns").ToString());
+
+                string var = varChangeObj.GetValue("var").ToString();
+                if (var == "health") changeData.variable = VarType.health;
+                if (var == "ability") changeData.variable = VarType.ability;
+                if (var == "victory") changeData.variable = VarType.victory;
+                if (var == "damage") changeData.variable = VarType.damage;
+
+                registeredEffects.Add(changeData);
+            }*/
         }
         yield return null;
     }
