@@ -154,7 +154,7 @@ public class GameController : MonoBehaviour
             return;
         }
         JArray fxArray = (JArray)e.GetValue("fx");
-        StartCoroutine(ParseCoroutine(fxArray));
+        StartCoroutine(ConvertToStructRoutine(fxArray));
 
         //send json to card parser
         //card parser returns list of variables that have/need to be changed
@@ -265,8 +265,9 @@ public class GameController : MonoBehaviour
         AppManager.INSTANCE.characterData[player] = data;
     }
 
-    private IEnumerator ParseCoroutine(JArray effects)
+    private IEnumerator ConvertToStructRoutine(JArray effects)
     {
+        List<VariableChange> variableChanges = new List<VariableChange>();
         foreach (JToken effect in effects)
         {
             JObject effectObj = effect.ToObject<JObject>();
@@ -310,10 +311,9 @@ public class GameController : MonoBehaviour
                 }
             }
 
-            // parse variable changes to struct form
+            // parse variable changes to more manageable struct form
             foreach (JToken varChange in varChanges)
             {
-                // parse to more manageable struct form
                 JObject varChangeObj = varChange.ToObject<JObject>();
                 VariableChange changeData = new VariableChange();
 
@@ -332,11 +332,57 @@ public class GameController : MonoBehaviour
                 foreach(int player in affectedPlayers)
                 {
                     changeData.player = player;
-                    registeredEffects.Add(changeData);
+                    variableChanges.Add(changeData);
                 }            
             }
         }
-        ApplyVarChanges();
+        ParseNewVarChanges(variableChanges);
+    }
+
+    /// <summary>
+    /// Parses a list of VariableChanges and applies the varchange or stores it in the register for future parse
+    /// </summary>
+    /// <param name="changes">The list of new VariableChanges</param>
+    public void ParseNewVarChanges(List<VariableChange> changes)
+    {
+        Debug.Log(changes.Count);
+        for(int i = 0; i < changes.Count; i++)
+        {
+            VariableChange change = changes[i];
+            if((change.variable == VarType.ability || change.variable == VarType.damage) && change.player != currentPlayer)
+            {
+                Debug.Log("an effect of type " + change.variable + " was added");
+                registeredEffects.Add(change);
+                continue;
+            }
+
+            if(change.offset > 0)
+            {
+                Debug.Log("an effect of type " + change.variable + " was added");
+                change.offset--;
+                registeredEffects.Add(change);
+                continue;
+            }
+
+            //apply change
+            switch (change.variable)
+            {
+                case VarType.health:
+                    AppManager.INSTANCE.characterData[change.player].AddToHealth(change.change, false);
+                    break;
+                case VarType.victory:
+                    AppManager.INSTANCE.characterData[change.player].AddToVictoryPoints(change.change);
+                    break;
+            }
+
+            if (change.turns > 1)
+            {
+                Debug.Log("an effect of type " + change.variable + " was added");
+                change.turns--;
+                registeredEffects.Add(change);
+            }
+        }
+        EndUpdate();
     }
 
     /// <summary>
@@ -362,7 +408,6 @@ public class GameController : MonoBehaviour
                 registeredEffects[i] = varChange;
                 continue;
             }
-
 
             varChange.turns--;
             if(varChange.turns <= 0)
@@ -399,8 +444,8 @@ public class GameController : MonoBehaviour
         {
             VariableChange varChange = registeredEffects[i];
 
-            //if its an ability modifier and target player is not currentplayer, apply it but to not modify it.
-            //if its a damage modifier and target player is not currentplayer, apply it but to not modify it.
+            //if its an ability modifier and target player is not currentplayer, apply it but do not modify it.
+            //if its a damage modifier and target player is not currentplayer, apply it but do not modify it.
             if (varChange.variable == VarType.ability || varChange.variable == VarType.damage)
             {
                 //apply varchange then count down and remove if turns is 0 or smaller then
