@@ -3190,6 +3190,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1096807773}
   - component: {fileID: 1096807774}
+  - component: {fileID: 1096807775}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -3221,14 +3222,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02477fcd727798e4494170a6372f368e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UIController: {fileID: 0}
+  registeredEffects: []
+--- !u!114 &1096807775
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1096807772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09dcb16816abb1247af630d7c2ea2c30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   choiceDialog: {fileID: 1918483312}
   popupMessage: {fileID: 1348682723}
+  roundText: {fileID: 1479522418}
   characterUIControllers:
   - {fileID: 704910626}
   - {fileID: 1235815834}
   - {fileID: 1916882094}
   - {fileID: 538839518}
-  roundText: {fileID: 1479522418}
 --- !u!1 &1100075480
 GameObject:
   m_ObjectHideFlags: 0
@@ -6303,8 +6317,8 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1096807774}
-        m_MethodName: CloseDamageDialog
+      - m_Target: {fileID: 1918483312}
+        m_MethodName: Deactivate
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -6835,7 +6849,6 @@ MonoBehaviour:
   - {fileID: 2038304019}
   - {fileID: 503324325}
   - {fileID: 1853902432}
-  affectedPlayers: 
 --- !u!1 &1966733652
 GameObject:
   m_ObjectHideFlags: 0

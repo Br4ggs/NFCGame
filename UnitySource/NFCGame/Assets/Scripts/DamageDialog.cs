@@ -11,10 +11,13 @@ public class DamageDialog : MonoBehaviour
     public Toggle[] toggles;
 
     private bool multipleChoice;
-    public List<int> affectedPlayers;
+    private Action callBack;
+    public List<int> affectedPlayers { get; private set; }
 
-    public void ActivateDialogBox(bool multipleChoice, int[] targetPlayers, string name, string description)
+    public void ActivateDialogBox(bool multipleChoice, int[] targetPlayers, string name, string description, Action callback)
     {
+        affectedPlayers = new List<int>();
+        affectedPlayers.Clear();
         gameObject.SetActive(true);
 
         abilityName.text = name;
@@ -35,12 +38,8 @@ public class DamageDialog : MonoBehaviour
                 toggles[i].gameObject.SetActive(false);
             }
         }
-    }
 
-    public int[] DeactivateDialogBox()
-    {
-        gameObject.SetActive(false);
-        return affectedPlayers.ToArray();
+        callBack = callback;
     }
 
     public void OnToggleUpdate(int player)
@@ -60,5 +59,13 @@ public class DamageDialog : MonoBehaviour
             affectedPlayers.Clear();
         }
         affectedPlayers.Add(player);
+    }
+
+    public void Deactivate()
+    {
+        gameObject.SetActive(false);
+
+        if(callBack != null)
+            callBack();
     }
 }

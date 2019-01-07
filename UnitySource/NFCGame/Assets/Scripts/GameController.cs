@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,53 +16,38 @@ using Newtonsoft.Json.Linq;
 /// </summary>
 public class GameController : MonoBehaviour
 {
-    public DamageDialog choiceDialog;
-    public PopupDialog popupMessage;
-    public FlatCharUIController[] characterUIControllers;
-    public Text roundText;
+    public GameUIController UIController;
 
     private int currentPlayer;
     private int currentRound;
-    private bool dialogUp;
 
     public List<VariableChange> registeredEffects = new List<VariableChange>();
-    private List<int> affectedPlayers = new List<int>();
 
     /// <summary>
     /// setup
     /// </summary>
     void Start()
     {
+        UIController = GetComponent<GameUIController>();
+
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
 
-        choiceDialog.DeactivateDialogBox();
-        popupMessage.gameObject.SetActive(false);
-        dialogUp = false;
-
         currentPlayer = 0;
-        characterUIControllers[currentPlayer].HighLighted = true;
 
-        for(int i = 0; i < characterUIControllers.Length; i++)
+        for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
         {
-            bool enabled = i < AppManager.INSTANCE.characterData.Count;
-            characterUIControllers[i].gameObject.SetActive(enabled);
-
-            if (enabled)
-            {
-                PlayerData data = AppManager.INSTANCE.characterData[i];
-                data.currentHealth = data.maxHealth;
-                data.currentAbilityPoints = data.maxAbilityPoints;
-                data.victoryPoints = 0;
-                data.lives = 3;
-                data.isAlive = true;
-                AppManager.INSTANCE.characterData[i] = data;
-
-                characterUIControllers[i].UpdateUI(data);
-            }
+            PlayerData data = AppManager.INSTANCE.characterData[i];
+            data.currentHealth = data.maxHealth;
+            data.currentAbilityPoints = data.maxAbilityPoints;
+            data.victoryPoints = 0;
+            data.lives = 3;
+            data.isAlive = true;
+            AppManager.INSTANCE.characterData[i] = data;
         }
 
-        roundText.text = currentRound.ToString("D2");
-        EndUpdate();
+        UIController.GenerateUIProfiles();
+        UIController.SetHighLightedPlayer(currentPlayer);
+        UIController.StartGame();
     }
 
     /// <summary>
@@ -90,13 +76,10 @@ public class GameController : MonoBehaviour
             AppManager.INSTANCE.SwitchScene(4);
         }
 
-        characterUIControllers[currentPlayer].HighLighted = false;
         currentPlayer = 0;
 
-        characterUIControllers[currentPlayer].HighLighted = true;
-
         currentRound++;
-        roundText.text = currentRound.ToString("D2");
+        //roundText.text = currentRound.ToString("D2");
 
         //update player values
         //calculate player damage and ability point values
@@ -113,8 +96,6 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void NextPlayer()
     {
-        characterUIControllers[currentPlayer].HighLighted = false;
-
         if(currentPlayer + 1 >= AppManager.INSTANCE.characterData.Count)
         {
             NextRound();
@@ -129,10 +110,9 @@ public class GameController : MonoBehaviour
             NextPlayer();
             return;
         }
-        characterUIControllers[currentPlayer].HighLighted = true;
+        UIController.SetHighLightedPlayer(currentPlayer);
 
         ApplyRegisteredEffects(currentPlayer);
-        EndUpdate();
     }
 
     /// <summary>
@@ -142,13 +122,12 @@ public class GameController : MonoBehaviour
     /// <param name="e"></param>
     void OnDataRecievedHandler(object sender, JObject e)
     {
-        if (dialogUp)
+        if (UIController.DialogUp)
             return;
 
         if (e.GetValue("type").ToString() != "Ability")
         {
-            popupMessage.ShowDialog("An incorrect card type was played.");
-            dialogUp = true;
+            UIController.DisplayMessageBox("An incorrect card type was played.");
             return;
         }
         JArray fxArray = (JArray)e.GetValue("fx");
@@ -161,40 +140,37 @@ public class GameController : MonoBehaviour
     /// <param name="changes">List of effects that were applied this update, used for UI</param>
     private void EndUpdate(List<VariableChange> changes)
     {
+        Debug.Log("endupdate called");
         //changes is the full list of applied variable changes this turn
         //like attacks or maybe debuffs for the current player
         //this is passed to the ui manager
 
         for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
         {
-            characterUIControllers[i].UpdateUI(AppManager.INSTANCE.characterData[i]);
+            //characterUIControllers[i].UpdateUI(AppManager.INSTANCE.characterData[i]);
         }
 
         //check if final player
         //update ui
     }
-    
-    public void CloseDamageDialog()
-    {
-        dialogUp = false;
-        affectedPlayers.AddRange(choiceDialog.DeactivateDialogBox());
-    }
 
     public void ClosePopupDialog()
     {
-        dialogUp = false;
-        popupMessage.gameObject.SetActive(false);
+        //dialogUp = false;
+        //popupMessage.gameObject.SetActive(false);
     }
 
     private IEnumerator ConvertToStructRoutine(JArray effects)
     {
         List<VariableChange> variableChanges = new List<VariableChange>();
+        List<int> affectedPlayers = new List<int>();
+
         foreach (JToken effect in effects)
         {
+            affectedPlayers.Clear();
             JObject effectObj = effect.ToObject<JObject>();
             string target = effectObj.GetValue("trgts").ToString();
             JArray varChanges = (JArray)effectObj.GetValue("varchng");
-            affectedPlayers.Clear();
 
             // get specified targets for this effect
             if (target == "user") //skip the targeting step
@@ -215,15 +191,15 @@ public class GameController : MonoBehaviour
                             targetPlayers.Add(i);
                     }
 
-                    choiceDialog.ActivateDialogBox((targetType == "multiple"), targetPlayers.ToArray(), "test", "this is a test");
-                    dialogUp = true;
+                    UIController.DisplayChoiceBox((targetType == "multiple"), targetPlayers.ToArray(), "test", "this is a test");
 
-                    while (dialogUp)
+                    while (UIController.DialogUp)
                     {
                         Debug.Log("waiting...");
                         yield return null;
                     }
                     Debug.Log("moving on...");
+                    affectedPlayers.AddRange(UIController.GetChoiceBoxResult());
                 }
                 else
                 {
@@ -279,7 +255,7 @@ public class GameController : MonoBehaviour
             if (result.HasValue)
                 registeredEffects.Add(result.Value);
         }
-        EndUpdate();
+        EndUpdate(new List<VariableChange>());
     }
 
     /// <summary>
@@ -301,6 +277,7 @@ public class GameController : MonoBehaviour
             else
                 registeredEffects.RemoveAt(i);
         }
+        EndUpdate(new List<VariableChange>());
     }
 
     public VariableChange? ApplyVarChange(VariableChange varChange)
@@ -331,7 +308,6 @@ public class GameController : MonoBehaviour
         }
 
         varChange.turns--;
-        Debug.Log(varChange.turns);
         if (varChange.turns <= 0)
         {
             return null;
