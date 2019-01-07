@@ -22,7 +22,6 @@ public class GameController : MonoBehaviour
 
     private int currentPlayer;
     private int currentRound;
-    private AbilityData currentData;
     private bool dialogUp;
 
     public List<VariableChange> registeredEffects = new List<VariableChange>();
@@ -78,13 +77,13 @@ public class GameController : MonoBehaviour
     /// </summary>
     public void NextRound()
     {
+        //check if game ends
         int numOfActivePlayers = 0;
         foreach (PlayerData player in AppManager.INSTANCE.characterData)
         {
             if (player.isAlive)
                 numOfActivePlayers++;
         }
-
         if (numOfActivePlayers < 2)
         {
             Debug.Log("GAME IS OVER");
@@ -93,8 +92,6 @@ public class GameController : MonoBehaviour
 
         characterUIControllers[currentPlayer].HighLighted = false;
         currentPlayer = 0;
-        if (!AppManager.INSTANCE.characterData[currentPlayer].isAlive)
-            NextPlayer();
 
         characterUIControllers[currentPlayer].HighLighted = true;
 
@@ -102,14 +99,13 @@ public class GameController : MonoBehaviour
         roundText.text = currentRound.ToString("D2");
 
         //update player values
+        //calculate player damage and ability point values
+
         foreach(PlayerData character in AppManager.INSTANCE.characterData)
         {
             if(character.isAlive)
                 character.currentAbilityPoints = character.maxAbilityPoints;
         }
-
-        //update ui
-        EndUpdate();
     }
 
     /// <summary>
@@ -126,15 +122,17 @@ public class GameController : MonoBehaviour
         else
         {
             currentPlayer++;
-            if (!AppManager.INSTANCE.characterData[currentPlayer].isAlive)
-            {
-                NextPlayer();
-                return;
-            }
-
-            characterUIControllers[currentPlayer].HighLighted = true;
-            EndUpdate();
         }
+
+        if (!AppManager.INSTANCE.characterData[currentPlayer].isAlive)
+        {
+            NextPlayer();
+            return;
+        }
+        characterUIControllers[currentPlayer].HighLighted = true;
+
+        ApplyRegisteredEffects(currentPlayer);
+        EndUpdate();
     }
 
     /// <summary>
@@ -155,56 +153,6 @@ public class GameController : MonoBehaviour
         }
         JArray fxArray = (JArray)e.GetValue("fx");
         StartCoroutine(ConvertToStructRoutine(fxArray));
-
-        //send json to card parser
-        //card parser returns list of variables that have/need to be changed
-        //change variables if not already
-        //send data to ui elements
-
-        /*currentData = e.ToObject<AbilityData>();
-        PlayerData currentPlayerData = AppManager.INSTANCE.characterData[currentPlayer];
-
-        if (currentPlayerData.currentAbilityPoints < currentData.pointCost)
-        {
-            popupMessage.ShowDialog("You do not have enough points left to play this card");
-            dialogUp = true;
-            return;
-        }
-
-        currentPlayerData.currentAbilityPoints -= currentData.pointCost;
-        
-        if(currentData.heals > 0)
-        {
-            if (currentPlayerData.currentHealth + currentData.heals > currentPlayerData.maxHealth)
-                currentPlayerData.currentHealth = currentPlayerData.maxHealth;
-            else
-                currentPlayerData.currentHealth += currentData.heals;
-        }
-
-        AppManager.INSTANCE.characterData[currentPlayer] = currentPlayerData;
-
-        if (currentData.damage > 0)
-        {
-            List<int> targetPlayers = new List<int>();
-            for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
-            {
-                if (i == currentPlayer)
-                    continue;
-                if (AppManager.INSTANCE.characterData[i].isAlive && AppManager.INSTANCE.characterData[i].currentHealth > 0)
-                    targetPlayers.Add(i);
-            }
-
-            choiceDialog.ActivateDialogBox(currentData.canDamageMultiple, targetPlayers.ToArray(), currentData.name, currentData.description);
-            dialogUp = true;
-            return;
-        }
-
-        //update ui of players
-        EndUpdate();
-
-        if(AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints <= 0)
-            NextPlayer();
-        */
     }
 
     /// <summary>
@@ -224,17 +172,6 @@ public class GameController : MonoBehaviour
     {
         dialogUp = false;
         affectedPlayers.AddRange(choiceDialog.DeactivateDialogBox());
-
-        /*for (int i = 0; i < affectedPlayers.Length; i++)
-        {
-            DamagePlayer(affectedPlayers[i], currentData.damage);
-        }
-
-        //update ui of players
-        EndUpdate();
-
-        if (AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints <= 0)
-            NextPlayer();*/
     }
 
     public void ClosePopupDialog()
@@ -339,98 +276,37 @@ public class GameController : MonoBehaviour
         ParseNewVarChanges(variableChanges);
     }
 
+    // option 1:
+    // when card with ability modifier is played:
+    // apply to target player
+    // if target has already had their turn this round, do not take off a turn
+    // if target has not yet had their turn this round, take off a turn
+    // for start of each round after this, take off a turn
+    // at start of new round, when the ability points and damage point are reset, apply the var modifier
+
+    // option 2: 
+    // Refresh ability and damage points when its a players turn, not on new round.
+    // then apply all applicable modifiers
+
     /// <summary>
     /// Parses a list of VariableChanges and applies the varchange or stores it in the register for future parse
     /// </summary>
     /// <param name="changes">The list of new VariableChanges</param>
     public void ParseNewVarChanges(List<VariableChange> changes)
     {
-        Debug.Log(changes.Count);
         for(int i = 0; i < changes.Count; i++)
         {
             VariableChange change = changes[i];
             if((change.variable == VarType.ability || change.variable == VarType.damage) && change.player != currentPlayer)
             {
-                Debug.Log("an effect of type " + change.variable + " was added");
                 registeredEffects.Add(change);
                 continue;
             }
 
-            if(change.offset > 0)
-            {
-                Debug.Log("an effect of type " + change.variable + " was added");
-                change.offset--;
-                registeredEffects.Add(change);
-                continue;
-            }
-
-            //apply change
-            switch (change.variable)
-            {
-                case VarType.health:
-                    AppManager.INSTANCE.characterData[change.player].AddToHealth(change.change, false);
-                    break;
-                case VarType.victory:
-                    AppManager.INSTANCE.characterData[change.player].AddToVictoryPoints(change.change);
-                    break;
-            }
-
-            if (change.turns > 1)
-            {
-                Debug.Log("an effect of type " + change.variable + " was added");
-                change.turns--;
-                registeredEffects.Add(change);
-            }
+            VariableChange? result = ApplyVarChange(change);
+            if (result.HasValue)
+                registeredEffects.Add(result.Value);
         }
-        EndUpdate();
-    }
-
-    /// <summary>
-    /// Applies registered changes to the players and updates the registered effects
-    /// </summary>
-    private void ApplyVarChanges()
-    {
-        for (int i = registeredEffects.Count - 1; i >= 0; i--)
-        {
-            VariableChange varChange = registeredEffects[i];
-
-            if (varChange.variable == VarType.ability || varChange.variable == VarType.damage)
-                continue;
-
-            //if its a victory point modifier, apply it when its applied(depending on offset),
-            //and each players turn
-            //if its a health point modifier, apply it when its applied(depending on offset),
-            //and each players turn
-
-            if (varChange.offset > 0)
-            {
-                varChange.offset--;
-                registeredEffects[i] = varChange;
-                continue;
-            }
-
-            varChange.turns--;
-            if(varChange.turns <= 0)
-            {
-                registeredEffects.RemoveAt(i);
-            }
-            else
-            {
-                registeredEffects[i] = varChange;
-            }
-
-            Debug.Log("applying damage");
-            switch (varChange.variable)
-            {
-                case VarType.health:
-                    AppManager.INSTANCE.characterData[varChange.player].AddToHealth(varChange.change, false);
-                    break;
-                case VarType.victory:
-                    AppManager.INSTANCE.characterData[varChange.player].AddToVictoryPoints(varChange.change);
-                    break;
-            }
-        }
-
         EndUpdate();
     }
 
@@ -438,45 +314,58 @@ public class GameController : MonoBehaviour
     /// This is called when its a players turn, and looks through/applies the registerd effects for any buffs/debuffs that apply
     /// to this player
     /// </summary>
-    private void ApplyOnTurnModifiers()
+    private void ApplyRegisteredEffects(int currentPlayer)
     {
         for (int i = registeredEffects.Count - 1; i >= 0; i--)
         {
             VariableChange varChange = registeredEffects[i];
 
-            //if its an ability modifier and target player is not currentplayer, apply it but do not modify it.
-            //if its a damage modifier and target player is not currentplayer, apply it but do not modify it.
-            if (varChange.variable == VarType.ability || varChange.variable == VarType.damage)
-            {
-                //apply varchange then count down and remove if turns is 0 or smaller then
+            if ((varChange.variable == VarType.ability || varChange.variable == VarType.damage) && varChange.player != currentPlayer)
+                continue;
 
-                if (varChange.player != currentPlayer)
-                {
-                    Debug.Log("skipping " + varChange.variable + " for player " + varChange.player + " as it's not his turn yet");
-                    continue;
-
-                }
-
-                //check if this varchange first needs to be skipped
-                if (varChange.offset > 0)
-                {
-                    varChange.offset--;
-                    registeredEffects[i] = varChange;
-                    continue;
-                }
-
-                Debug.Log("remove 1 turn for " + varChange.variable + " for player " + varChange.player);
-                varChange.turns--;
-                if (varChange.turns <= 0)
-                {
-                    registeredEffects.RemoveAt(i);
-                }
-                else
-                {
-                    registeredEffects[i] = varChange;
-                }
-            }
+            VariableChange? result = ApplyVarChange(varChange);
+            if (result.HasValue)
+                registeredEffects[i] = result.Value;
+            else
+                registeredEffects.RemoveAt(i);
         }
+    }
+
+    public VariableChange? ApplyVarChange(VariableChange varChange)
+    {
+        //check if this varchange first needs to be skipped
+        if (varChange.offset > 0)
+        {
+            varChange.offset--;
+            return varChange;
+        }
+
+
+        Debug.Log("applying damage");
+        switch (varChange.variable)
+        {
+            case VarType.health:
+                AppManager.INSTANCE.characterData[varChange.player].AddToHealth(varChange.change, false);
+                break;
+            case VarType.victory:
+                AppManager.INSTANCE.characterData[varChange.player].AddToVictoryPoints(varChange.change);
+                break;
+            case VarType.ability:
+                AppManager.INSTANCE.characterData[varChange.player].AddToAbilityPoints(varChange.change);
+                break;
+            case VarType.damage:
+                AppManager.INSTANCE.characterData[varChange.player].AddToDamage(varChange.change);
+                break;
+        }
+
+        varChange.turns--;
+        Debug.Log(varChange.turns);
+        if (varChange.turns <= 0)
+        {
+            return null;
+        }
+
+        return varChange;
     }
 }
 

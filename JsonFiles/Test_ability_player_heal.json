@@ -1,0 +1,20 @@
+{
+  "type": "Ability",
+  "name": "3TurnBleed",
+  "desc": "Bleeds the target for 1 damage 3 turns",
+  "ptCst": 1,
+  "fx": [
+    {
+      "trgts": "user",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": 1,
+          "offst": 0,
+          "trns": 3
+        }
+      ]
+    }
+  ]
+}
