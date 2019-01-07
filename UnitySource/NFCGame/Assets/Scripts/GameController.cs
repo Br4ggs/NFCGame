@@ -156,16 +156,22 @@ public class GameController : MonoBehaviour
     }
 
     /// <summary>
-    /// called after a user played a card or when it's the next players turn
+    /// Called after a user has played a card or when it's the next players turn
     /// </summary>
-    private void EndUpdate()
+    /// <param name="changes">List of effects that were applied this update, used for UI</param>
+    private void EndUpdate(List<VariableChange> changes)
     {
+        //changes is the full list of applied variable changes this turn
+        //like attacks or maybe debuffs for the current player
+        //this is passed to the ui manager
+
         for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
         {
             characterUIControllers[i].UpdateUI(AppManager.INSTANCE.characterData[i]);
         }
 
         //check if final player
+        //update ui
     }
     
     public void CloseDamageDialog()
@@ -178,28 +184,6 @@ public class GameController : MonoBehaviour
     {
         dialogUp = false;
         popupMessage.gameObject.SetActive(false);
-    }
-
-    //change this to damage/heal players?
-    private void DamagePlayer(int player, int damage)
-    {
-        PlayerData data = AppManager.INSTANCE.characterData[player];
-        data.currentHealth -= damage;
-
-        if(data.currentHealth <= 0)
-        {
-            AppManager.INSTANCE.characterData[currentPlayer].victoryPoints++;
-
-            if (data.lives - 1 < 0)
-                data.isAlive = false;
-            else
-            {
-                data.lives--;
-                data.currentHealth = data.maxHealth;
-            }
-        }
-
-        AppManager.INSTANCE.characterData[player] = data;
     }
 
     private IEnumerator ConvertToStructRoutine(JArray effects)
@@ -275,18 +259,6 @@ public class GameController : MonoBehaviour
         }
         ParseNewVarChanges(variableChanges);
     }
-
-    // option 1:
-    // when card with ability modifier is played:
-    // apply to target player
-    // if target has already had their turn this round, do not take off a turn
-    // if target has not yet had their turn this round, take off a turn
-    // for start of each round after this, take off a turn
-    // at start of new round, when the ability points and damage point are reset, apply the var modifier
-
-    // option 2: 
-    // Refresh ability and damage points when its a players turn, not on new round.
-    // then apply all applicable modifiers
 
     /// <summary>
     /// Parses a list of VariableChanges and applies the varchange or stores it in the register for future parse
