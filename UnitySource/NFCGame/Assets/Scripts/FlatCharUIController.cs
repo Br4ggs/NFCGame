@@ -56,4 +56,20 @@ public class FlatCharUIController : MonoBehaviour
     {
         background.color = highlighted ? Color.blue : defaultBackgroundColor;
     }
+
+    public void ShowVarChange(VarType variable, int change)
+    {
+        //show effect on corresponding counter
+        //can be different depending on if change is negative
+    }
+
+    public void RegisterEffect(VariableChange change)
+    {
+        //add an effect visualiser
+    }
+
+    public void RemoveEffects()
+    {
+        //remove registered effects
+    }
 }

@@ -78,8 +78,8 @@ public class GameUIController : MonoBehaviour
 
         foreach(VariableChange change in changes)
         {
-            bool positive = (change.change >= 0);
             //apply visual effect
+            characterUIControllers[change.player].ShowVarChange(change.variable, change.change);
             //update ui profile
             PlayerData data = AppManager.INSTANCE.characterData[change.player];
             characterUIControllers[change.player].UpdateUI(data);
@@ -89,6 +89,13 @@ public class GameUIController : MonoBehaviour
     public void UpdateStatusEffects(List<VariableChange> statusEffects)
     {
         Debug.Log(statusEffects.Count + " status effects need to be displayed");
+
+        Array.ForEach(characterUIControllers, controller => controller.RemoveEffects());
+
+        foreach(VariableChange effect in statusEffects)
+        {
+            characterUIControllers[effect.player].RegisterEffect(effect);
+        }
     }
 
     public void UpdatePlayerUI()
