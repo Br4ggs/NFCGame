@@ -6,10 +6,6 @@ using UnityEngine.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-//usefull aditions
-//-separate parsing class for handling data on the cards
-// usefull when implementing more advanced mechanics such as poisoning etc.
-
 /// <summary>
 /// Handles the logic of the game scene
 /// uses the UI controllers to manipulate the UI depending on the games state
@@ -58,31 +54,26 @@ public class GameController : MonoBehaviour
         AppManager.INSTANCE.OnValidJsonRecieved -= OnDataRecievedHandler;
     }
 
-    /// <summary>
-    /// called when all players have had their turn and the game advances to the next round
-    /// </summary>
-    public void NextRound()
+    private bool ShouldGameEnd()
     {
-        //check if game ends
         int numOfActivePlayers = 0;
         foreach (PlayerData player in AppManager.INSTANCE.characterData)
         {
             if (player.isAlive)
                 numOfActivePlayers++;
         }
-        if (numOfActivePlayers < 2)
-        {
-            Debug.Log("GAME IS OVER");
-            AppManager.INSTANCE.SwitchScene(4);
-        }
 
+        return (numOfActivePlayers < 2);
+    }
+
+    /// <summary>
+    /// called when all players have had their turn and the game advances to the next round
+    /// </summary>
+    private void NextRound()
+    {
         currentPlayer = 0;
-
         currentRound++;
-        //roundText.text = currentRound.ToString("D2");
-
-        //update player values
-        //calculate player damage and ability point values
+        UIController.SetRound(currentRound);
 
         foreach(PlayerData character in AppManager.INSTANCE.characterData)
         {
@@ -94,7 +85,7 @@ public class GameController : MonoBehaviour
     /// <summary>
     /// called when the current player finishes their turn
     /// </summary>
-    public void NextPlayer()
+    private void NextPlayer()
     {
         if(currentPlayer + 1 >= AppManager.INSTANCE.characterData.Count)
         {
@@ -110,9 +101,15 @@ public class GameController : MonoBehaviour
             NextPlayer();
             return;
         }
-        UIController.SetHighLightedPlayer(currentPlayer);
 
+        UIController.SetHighLightedPlayer(currentPlayer);
         ApplyRegisteredEffects(currentPlayer);
+
+        if (!AppManager.INSTANCE.characterData[currentPlayer].isAlive)
+        {
+            NextPlayer();
+            return;
+        }
     }
 
     /// <summary>
@@ -120,7 +117,7 @@ public class GameController : MonoBehaviour
     /// </summary>
     /// <param name="sender"></param>
     /// <param name="e"></param>
-    void OnDataRecievedHandler(object sender, JObject e)
+    private void OnDataRecievedHandler(object sender, JObject e)
     {
         if (UIController.DialogUp)
             return;
@@ -140,24 +137,12 @@ public class GameController : MonoBehaviour
     /// <param name="changes">List of effects that were applied this update, used for UI</param>
     private void EndUpdate(List<VariableChange> changes)
     {
-        Debug.Log("endupdate called");
-        //changes is the full list of applied variable changes this turn
-        //like attacks or maybe debuffs for the current player
-        //this is passed to the ui manager
+        UIController.ShowVarChanges(changes);
+        UIController.UpdateStatusEffects(registeredEffects);
+        UIController.UpdatePlayerUI();
 
-        for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
-        {
-            //characterUIControllers[i].UpdateUI(AppManager.INSTANCE.characterData[i]);
-        }
-
-        //check if final player
-        //update ui
-    }
-
-    public void ClosePopupDialog()
-    {
-        //dialogUp = false;
-        //popupMessage.gameObject.SetActive(false);
+        if (ShouldGameEnd())
+            AppManager.INSTANCE.SwitchScene(4);
     }
 
     private IEnumerator ConvertToStructRoutine(JArray effects)
@@ -242,6 +227,7 @@ public class GameController : MonoBehaviour
     /// <param name="changes">The list of new VariableChanges</param>
     public void ParseNewVarChanges(List<VariableChange> changes)
     {
+        List<VariableChange> changesToSendToUI = new List<VariableChange>();
         for(int i = 0; i < changes.Count; i++)
         {
             VariableChange change = changes[i];
@@ -253,9 +239,14 @@ public class GameController : MonoBehaviour
 
             VariableChange? result = ApplyVarChange(change);
             if (result.HasValue)
+            {
                 registeredEffects.Add(result.Value);
+                changesToSendToUI.Add(result.Value);
+            }
+            else
+                changesToSendToUI.Add(change);
         }
-        EndUpdate(new List<VariableChange>());
+        EndUpdate(changesToSendToUI);
     }
 
     /// <summary>
@@ -264,31 +255,36 @@ public class GameController : MonoBehaviour
     /// </summary>
     private void ApplyRegisteredEffects(int currentPlayer)
     {
+        List<VariableChange> changesToSendToUI = new List<VariableChange>();
         for (int i = registeredEffects.Count - 1; i >= 0; i--)
         {
-            VariableChange varChange = registeredEffects[i];
+            VariableChange change = registeredEffects[i];
 
-            if ((varChange.variable == VarType.ability || varChange.variable == VarType.damage) && varChange.player != currentPlayer)
+            if ((change.variable == VarType.ability || change.variable == VarType.damage) && change.player != currentPlayer)
                 continue;
 
-            VariableChange? result = ApplyVarChange(varChange);
+            VariableChange? result = ApplyVarChange(change);
             if (result.HasValue)
+            {
                 registeredEffects[i] = result.Value;
+                changesToSendToUI.Add(result.Value);
+            }
             else
+            {
                 registeredEffects.RemoveAt(i);
+                changesToSendToUI.Add(change);
+            }
         }
-        EndUpdate(new List<VariableChange>());
+        EndUpdate(changesToSendToUI);
     }
 
     public VariableChange? ApplyVarChange(VariableChange varChange)
     {
-        //check if this varchange first needs to be skipped
         if (varChange.offset > 0)
         {
             varChange.offset--;
             return varChange;
         }
-
 
         Debug.Log("applying damage");
         switch (varChange.variable)

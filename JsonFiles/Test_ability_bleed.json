@@ -21,12 +21,17 @@
           "chng": -1,
           "offst": 0,
           "trns": 3
-        },
+        }
+      ]
+    },
+    {
+      "trgts": "user",
+      "varchng": [
         {
           "var": "ability",
           "type": "additive",
-          "chng": 1,
-          "offst": 3,
+          "chng": -1,
+          "offst": 0,
           "trns": 3
         }
       ]
