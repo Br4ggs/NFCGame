@@ -5,13 +5,16 @@ using UnityEngine.UI;
 
 public class FlatCharUIController : MonoBehaviour
 {
-    Image background;
-    Color defaultBackgroundColor;
-    Text charName;
-    Text lives;
-    Text hitPoints;
-    Text abilityPoints;
-    Text victoryPoints;
+    public GameObject VarChangeEffect;
+    private Image background;
+    private Color defaultBackgroundColor;
+    private Text charName;
+    private Text lives;
+    private Text hitPoints;
+    private Text abilityPoints;
+    private Text victoryPoints;
+
+    private RectTransform canvas;
 
     private bool highlighted;
     public bool HighLighted
@@ -31,6 +34,7 @@ public class FlatCharUIController : MonoBehaviour
     {
         background = GetComponent<Image>();
         defaultBackgroundColor = background.color;
+        canvas = GameObject.Find("Canvas").GetComponent<RectTransform>();
         charName = transform.Find("Name").GetComponent<Text>();
         lives = transform.Find("Lives").GetComponent<Text>();
         hitPoints = transform.Find("HealthCounter").GetComponent<Text>();
@@ -57,10 +61,11 @@ public class FlatCharUIController : MonoBehaviour
         background.color = highlighted ? Color.blue : defaultBackgroundColor;
     }
 
-    public void ShowVarChange(VarType variable, int change)
+    public void ShowVarChange(VarType variable, int change, PlayerData newData)
     {
         //show effect on corresponding counter
         //can be different depending on if change is negative
+        StartCoroutine(ShowVarChangeCoRoutine(0.5f, variable, change, newData));
     }
 
     public void RegisterEffect(VariableChange change)
@@ -71,5 +76,32 @@ public class FlatCharUIController : MonoBehaviour
     public void RemoveEffects()
     {
         //remove registered effects
+    }
+
+    public IEnumerator ShowVarChangeCoRoutine(float duration, VarType variable, int change, PlayerData newData)
+    {
+        Vector3 position = Vector3.zero;
+        switch (variable)
+        {
+            case VarType.health:
+                position = hitPoints.transform.position;
+                hitPoints.text = newData.currentHealth.ToString("D2");
+                break;
+            case VarType.ability:
+                position = abilityPoints.transform.position;
+                abilityPoints.text = newData.currentAbilityPoints.ToString("D2");
+                break;
+            case VarType.victory:
+                position = victoryPoints.transform.position;
+                victoryPoints.text = newData.victoryPoints.ToString("D2");
+                break;
+        }
+        GameObject instance = Instantiate(VarChangeEffect, position, Quaternion.identity, canvas);
+        instance.transform.Find("Text").GetComponent<Text>().text = (change > 0) ? "+" + change.ToString() : change.ToString();
+        instance.GetComponent<Image>().color = (change > 0) ? Color.green : Color.red;
+
+        yield return new WaitForSeconds(duration);
+
+        Destroy(instance);
     }
 }

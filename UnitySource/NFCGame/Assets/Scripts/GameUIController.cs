@@ -74,16 +74,22 @@ public class GameUIController : MonoBehaviour
 
     public void ShowVarChanges(List<VariableChange> changes)
     {
-        Debug.Log(changes.Count + " variable changes were showed");
+        StartCoroutine(ShowVarChangeCoRoutine(changes, 0.2f));
+    }
 
-        foreach(VariableChange change in changes)
+    private IEnumerator ShowVarChangeCoRoutine(List<VariableChange> changes, float waitPeriod)
+    {
+        foreach (VariableChange change in changes)
         {
-            //apply visual effect
-            characterUIControllers[change.player].ShowVarChange(change.variable, change.change);
             //update ui profile
             PlayerData data = AppManager.INSTANCE.characterData[change.player];
-            characterUIControllers[change.player].UpdateUI(data);
+            //apply visual effect
+            characterUIControllers[change.player].ShowVarChange(change.variable, change.change, data);
+
+            yield return new WaitForSeconds(waitPeriod);
         }
+
+        UpdatePlayerUI();
     }
 
     public void UpdateStatusEffects(List<VariableChange> statusEffects)

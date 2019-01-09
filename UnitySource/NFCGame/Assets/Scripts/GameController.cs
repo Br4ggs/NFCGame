@@ -139,7 +139,7 @@ public class GameController : MonoBehaviour
     {
         UIController.ShowVarChanges(changes);
         UIController.UpdateStatusEffects(registeredEffects);
-        UIController.UpdatePlayerUI();
+        //UIController.UpdatePlayerUI();
 
         if (ShouldGameEnd())
             AppManager.INSTANCE.SwitchScene(4);

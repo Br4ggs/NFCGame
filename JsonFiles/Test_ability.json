@@ -28,13 +28,6 @@
           "chng": -1,
           "offst": 0,
           "trns": 1
-        },
-        {
-          "var": "damage",
-          "type": "additive",
-          "chng": -1,
-          "offst": 0,
-          "trns": 1
         }
       ]
     },
@@ -58,13 +51,6 @@
         },
         {
           "var": "victory",
-          "type": "additive",
-          "chng": 1,
-          "offst": 0,
-          "trns": 1
-        },
-        {
-          "var": "damage",
           "type": "additive",
           "chng": 1,
           "offst": 0,
