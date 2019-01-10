@@ -10,7 +10,9 @@
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 
-String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"Krodha\",\"description\":\"A strong bezerker who deals alot of damage in exchange for movement.\",\"maxHealth\":15,\"maxAbilityPoints\":5}";
+String debugtxt = "";
+//String debugtxt = "{\"type\":\"Ability\",\"name\":\"Sub1fromEach\",\"desc\":\"Subtracts one of each vars of multiple foes, and buffs each of the players vars\",\"ptCst\":1,\"fx\":[{\"trgts\":\"enemy\",\"trgtType\":\"multiple\",\"varchng\":[{\"var\":\"health\",\"type\":\"additive\",\"chng\":-1,\"offst\":0,\"trns\":1},{\"var\":\"ability\",\"type\":\"additive\",\"chng\":-1,\"offst\":0,\"trns\":1},{\"var\":\"victory\",\"type\":\"additive\",\"chng\":-1,\"offst\":0,\"trns\":1},{\"var\":\"damage\",\"type\":\"additive\",\"chng\":-1,\"offst\":0,\"trns\":1}]},{\"trgts\":\"user\",\"variableChanges\":[{\"var\":\"health\",\"type\":\"additive\",\"chng\":1,\"offst\":0,\"trns\":1},{\"var\":\"ability\",\"type\":\"additive\",\"chng\":1,\"offst\":0,\"trns\":1},{\"var\":\"victory\",\"type\":\"additive\",\"chng\":1,\"offst\":0,\"trns\":1},{\"var\":\"damage\",\"type\":\"additive\",\"chng\":1,\"offst\":0,\"trns\":1}]}]}";
+//String debugtxt = "{\"typeOf\":\"Character\",\"name\":\"Krodha\",\"description\":\"A strong bezerker who deals alot of damage in exchange for movement.\",\"maxHealth\":15,\"maxAbilityPoints\":5}";
 //String debugtxt = "{\"typeOf\":\"Ability\",\"name\":\"Mending salve\",\"description\":\"Heal yourself for 2 HP.\",\"damage\":0,\"canDamageMultiple\":false,\"heals\":2,\"pointCost\":3}";
 
 //card constants
@@ -20,6 +22,13 @@ byte blockByteSize = 16;
 //max buffer size for mifare classic 1k tags
 int bufferSize = 752;
 
+void serialEvent(){
+  if(Serial.available() > 0){
+    debugtxt = Serial.readStringUntil('\n');
+    Serial.println(debugtxt);
+  }
+}
+
 void setup() {
   Serial.begin(9600);
   SPI.begin();
@@ -28,6 +37,11 @@ void setup() {
 }
 
 void loop() {
+  if(debugtxt.length() > 752){
+    Serial.println("error: string too big to fit on tag");
+    return;
+  }
+  
   // generate the key
   MFRC522::MIFARE_Key key;
   for(byte i = 0; i < 6; i++){

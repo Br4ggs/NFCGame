@@ -1,0 +1,20 @@
+{
+  "typeOf": "Ability",
+  "name": "TestName",
+  "description": "TestDescription",
+  "pointCost": 2,
+  "effects": [ // the total list of "effect" for this card
+    { // this is such an effect
+      "targets": "user/enemy/enemies/all", // what will this effect target?
+      "variableChanges": [ // the total list of variable changes for this effect
+        { // this is such a variable change
+          "variable": "health/ability/victory/damage", //what stat to apply to?
+          "type": "additive/multiply", //what type of change?
+          "change": 3, // the amount of change, can also be negative
+          "offset": 0, // after how many turns should this effect be applied?
+          "turns": 1 // how many turns will this effect be applied
+        }
+      ]
+    }
+  ]
+}

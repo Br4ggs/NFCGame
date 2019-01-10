@@ -28,7 +28,7 @@ public class VRDebugConsole : MonoBehaviour
         if(INSTANCE == null)
         {
             INSTANCE = this;
-            DontDestroyOnLoad(this);
+            DontDestroyOnLoad(this.gameObject);
             Application.logMessageReceivedThreaded += LogCallback;
             Application.quitting += () => isQuitting = true;
 

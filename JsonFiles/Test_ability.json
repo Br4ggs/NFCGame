@@ -1,0 +1,62 @@
+{
+  "type": "Ability",
+  "name": "Sub1fromEach",
+  "desc": "Subtracts one of each vars of multiple foes, and buffs each of the players vars",
+  "ptCst": 1,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "multiple",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
+        },
+        {
+          "var": "ability",
+          "type": "additive",
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
+        },
+        {
+          "var": "victory",
+          "type": "additive",
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    },
+
+    {
+      "trgts": "user",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
+        },
+        {
+          "var": "ability",
+          "type": "additive",
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
+        },
+        {
+          "var": "victory",
+          "type": "additive",
+          "chng": 1,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}
