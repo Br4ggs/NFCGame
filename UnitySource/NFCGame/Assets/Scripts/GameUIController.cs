@@ -23,6 +23,7 @@ public class GameUIController : MonoBehaviour
     public void StartGame()
     {
         roundText.text = 0.ToString("D2");
+        Array.ForEach(characterUIControllers, controller => controller.RemoveEffects());
         for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
         {
             PlayerData data = AppManager.INSTANCE.characterData[i];
@@ -94,8 +95,6 @@ public class GameUIController : MonoBehaviour
 
     public void UpdateStatusEffects(List<VariableChange> statusEffects)
     {
-        Debug.Log(statusEffects.Count + " status effects need to be displayed");
-
         Array.ForEach(characterUIControllers, controller => controller.RemoveEffects());
 
         foreach(VariableChange effect in statusEffects)

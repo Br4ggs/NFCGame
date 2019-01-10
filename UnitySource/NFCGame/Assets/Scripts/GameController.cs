@@ -122,7 +122,8 @@ public class GameController : MonoBehaviour
         if (UIController.DialogUp)
             return;
 
-        if (e.GetValue("type").ToString() != "Ability")
+        JToken token = e.GetValue("type");
+        if (token == null || token.ToString() != "Ability")
         {
             UIController.DisplayMessageBox("An incorrect card type was played.");
             return;
@@ -139,7 +140,6 @@ public class GameController : MonoBehaviour
     {
         UIController.ShowVarChanges(changes);
         UIController.UpdateStatusEffects(registeredEffects);
-        //UIController.UpdatePlayerUI();
 
         if (ShouldGameEnd())
             AppManager.INSTANCE.SwitchScene(4);

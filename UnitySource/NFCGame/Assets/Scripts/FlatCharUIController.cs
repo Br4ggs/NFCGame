@@ -5,6 +5,8 @@ using UnityEngine.UI;
 
 public class FlatCharUIController : MonoBehaviour
 {
+    public EffectIcon[] effectIcons;
+    public EffectDisplay effectDisplay;
     public GameObject VarChangeEffect;
     private Image background;
     private Color defaultBackgroundColor;
@@ -15,6 +17,8 @@ public class FlatCharUIController : MonoBehaviour
     private Text victoryPoints;
 
     private RectTransform canvas;
+
+    private int visualisedDebufs;
 
     private bool highlighted;
     public bool HighLighted
@@ -40,6 +44,9 @@ public class FlatCharUIController : MonoBehaviour
         hitPoints = transform.Find("HealthCounter").GetComponent<Text>();
         abilityPoints = transform.Find("AbilityCounter").GetComponent<Text>();
         victoryPoints = transform.Find("VictoryCounter").GetComponent<Text>();
+
+        effectDisplay = transform.Find("EffectDisplay").GetComponent<EffectDisplay>();
+        effectDisplay.gameObject.SetActive(false);
     }
 
     public void UpdateUI(PlayerData data)
@@ -63,19 +70,29 @@ public class FlatCharUIController : MonoBehaviour
 
     public void ShowVarChange(VarType variable, int change, PlayerData newData)
     {
-        //show effect on corresponding counter
-        //can be different depending on if change is negative
         StartCoroutine(ShowVarChangeCoRoutine(0.5f, variable, change, newData));
     }
 
     public void RegisterEffect(VariableChange change)
     {
-        //add an effect visualiser
+        if (visualisedDebufs > effectIcons.Length - 1)
+            return;
+
+        EffectIcon icon = effectIcons[visualisedDebufs];
+
+        icon.ShowEffect(change);
+        visualisedDebufs++;
     }
 
     public void RemoveEffects()
     {
-        //remove registered effects
+        effectDisplay.gameObject.SetActive(false);
+
+        foreach(EffectIcon effect in effectIcons)
+        {
+            effect.gameObject.SetActive(false);
+        }
+        visualisedDebufs = 0;
     }
 
     public IEnumerator ShowVarChangeCoRoutine(float duration, VarType variable, int change, PlayerData newData)
