@@ -1,0 +1,21 @@
+{
+  "type": "Ability",
+  "name": "InstaKill",
+  "desc": "Removes all remaining health immediately for 3 turns",
+  "ptCst": 5,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "one",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": -20,
+          "offst": 0,
+          "trns": 3
+        }
+      ]
+    }
+  ]
+}

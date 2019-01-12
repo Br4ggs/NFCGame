@@ -85,7 +85,6 @@ public class SelectionController : MonoBehaviour
             GameObject profile = playerProfiles[i];
             if (i < AppManager.INSTANCE.characterData.Count)
             {
-                Debug.Log("this was reached");
                 GameObject nextProfile = playerProfiles[i + 1];
 
                 if (!profile.activeSelf)

@@ -1,0 +1,28 @@
+{
+  "type": "Ability",
+  "name": "AbilityDrain",
+  "desc": "Subtracts 2 ability points from the target for 3 turns, then adds 2",
+  "ptCst": 3,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "one",
+      "varchng": [
+        {
+          "var": "ability",
+          "type": "additive",
+          "chng": -2,
+          "offst": 0,
+          "trns": 3
+        },
+        {
+          "var": "ability",
+          "type": "additive",
+          "chng": 2,
+          "offst": 3,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}

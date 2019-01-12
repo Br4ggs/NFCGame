@@ -128,6 +128,15 @@ public class GameController : MonoBehaviour
             UIController.DisplayMessageBox("An incorrect card type was played.");
             return;
         }
+
+        int ptCost = int.Parse(e.GetValue("ptCst").ToString());
+        if(AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints < ptCost)
+        {
+            UIController.DisplayMessageBox("You do not have enough ability points left for this move.");
+            return;
+        }
+        AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints -= ptCost;
+
         JArray fxArray = (JArray)e.GetValue("fx");
         StartCoroutine(ConvertToStructRoutine(fxArray));
     }
@@ -241,7 +250,9 @@ public class GameController : MonoBehaviour
             if (result.HasValue)
             {
                 registeredEffects.Add(result.Value);
-                changesToSendToUI.Add(result.Value);
+
+                if (result.Value.offset <= 0)
+                    changesToSendToUI.Add(result.Value);
             }
             else
                 changesToSendToUI.Add(change);
@@ -263,16 +274,29 @@ public class GameController : MonoBehaviour
             if ((change.variable == VarType.ability || change.variable == VarType.damage) && change.player != currentPlayer)
                 continue;
 
+            if (!AppManager.INSTANCE.characterData[change.player].isAlive)
+            {
+                registeredEffects.RemoveAt(i);
+                continue;
+            }
+
             VariableChange? result = ApplyVarChange(change);
             if (result.HasValue)
             {
                 registeredEffects[i] = result.Value;
-                changesToSendToUI.Add(result.Value);
+
+                if (result.Value.offset <= 0 && change.offset <= 0)
+                {
+                    changesToSendToUI.Add(result.Value);
+                }
             }
             else
             {
                 registeredEffects.RemoveAt(i);
                 changesToSendToUI.Add(change);
+
+                Debug.Log("remove it");
+
             }
         }
         EndUpdate(changesToSendToUI);
@@ -280,17 +304,20 @@ public class GameController : MonoBehaviour
 
     public VariableChange? ApplyVarChange(VariableChange varChange)
     {
+        if (!AppManager.INSTANCE.characterData[varChange.player].isAlive)
+            return null;
+
         if (varChange.offset > 0)
         {
             varChange.offset--;
             return varChange;
         }
 
-        Debug.Log("applying damage");
         switch (varChange.variable)
         {
             case VarType.health:
                 AppManager.INSTANCE.characterData[varChange.player].AddToHealth(varChange.change, false);
+                //send something back to check player state
                 break;
             case VarType.victory:
                 AppManager.INSTANCE.characterData[varChange.player].AddToVictoryPoints(varChange.change);
@@ -352,6 +379,7 @@ public class PlayerData
         {
             if (lives - 1 < 0)
             {
+                currentHealth = 0;
                 isAlive = false;
                 return -1;
             }
