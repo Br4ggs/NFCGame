@@ -19,11 +19,16 @@ public class GameController : MonoBehaviour
 
     public List<VariableChange> registeredEffects = new List<VariableChange>();
 
+    private List<VariableChange> displayedEffects = new List<VariableChange>();
+
     /// <summary>
     /// setup
     /// </summary>
     void Start()
     {
+        registeredEffects.Clear();
+        displayedEffects.Clear();
+
         UIController = GetComponent<GameUIController>();
 
         AppManager.INSTANCE.OnValidJsonRecieved += OnDataRecievedHandler;
@@ -79,6 +84,7 @@ public class GameController : MonoBehaviour
         {
             if(character.isAlive)
                 character.currentAbilityPoints = character.maxAbilityPoints;
+                //show increase in displayed effects
         }
     }
 
@@ -87,6 +93,8 @@ public class GameController : MonoBehaviour
     /// </summary>
     private void NextPlayer()
     {
+        displayedEffects.Clear();
+
         if(currentPlayer + 1 >= AppManager.INSTANCE.characterData.Count)
         {
             NextRound();
@@ -137,24 +145,38 @@ public class GameController : MonoBehaviour
         }
         AppManager.INSTANCE.characterData[currentPlayer].currentAbilityPoints -= ptCost;
 
+        VariableChange ptChange = new VariableChange();
+        ptChange.player = currentPlayer;
+        ptChange.variable = VarType.ability;
+        ptChange.change = -ptCost;
+
+        displayedEffects.Add(ptChange);
+
+        //add it to displayed effects
+
         JArray fxArray = (JArray)e.GetValue("fx");
-        StartCoroutine(ConvertToStructRoutine(fxArray));
+        string name = e.GetValue("name").ToString();
+        string desc = e.GetValue("desc").ToString();
+        StartCoroutine(ConvertToStructRoutine(fxArray, name, desc));
     }
 
     /// <summary>
     /// Called after a user has played a card or when it's the next players turn
     /// </summary>
     /// <param name="changes">List of effects that were applied this update, used for UI</param>
-    private void EndUpdate(List<VariableChange> changes)
+    private void EndUpdate()
     {
-        UIController.ShowVarChanges(changes);
+        //UIController.ShowVarChanges(changes);
+        UIController.ShowVarChanges(new List<VariableChange>(displayedEffects));
         UIController.UpdateStatusEffects(registeredEffects);
+
+        displayedEffects.Clear();
 
         if (ShouldGameEnd())
             AppManager.INSTANCE.SwitchScene(4);
     }
 
-    private IEnumerator ConvertToStructRoutine(JArray effects)
+    private IEnumerator ConvertToStructRoutine(JArray effects, string name, string desc)
     {
         List<VariableChange> variableChanges = new List<VariableChange>();
         List<int> affectedPlayers = new List<int>();
@@ -185,7 +207,7 @@ public class GameController : MonoBehaviour
                             targetPlayers.Add(i);
                     }
 
-                    UIController.DisplayChoiceBox((targetType == "multiple"), targetPlayers.ToArray(), "test", "this is a test");
+                    UIController.DisplayChoiceBox((targetType == "multiple"), targetPlayers.ToArray(), name, desc);
 
                     while (UIController.DialogUp)
                     {
@@ -227,16 +249,16 @@ public class GameController : MonoBehaviour
                 }            
             }
         }
-        ParseNewVarChanges(variableChanges);
+        ApplyParsedEffects(variableChanges);
     }
 
     /// <summary>
-    /// Parses a list of VariableChanges and applies the varchange or stores it in the register for future parse
+    /// Applies the given list of varchanges or stores it in the register for future application
     /// </summary>
     /// <param name="changes">The list of new VariableChanges</param>
-    public void ParseNewVarChanges(List<VariableChange> changes)
+    public void ApplyParsedEffects(List<VariableChange> changes)
     {
-        List<VariableChange> changesToSendToUI = new List<VariableChange>();
+        //List<VariableChange> changesToSendToUI = new List<VariableChange>();
         for(int i = 0; i < changes.Count; i++)
         {
             VariableChange change = changes[i];
@@ -252,12 +274,15 @@ public class GameController : MonoBehaviour
                 registeredEffects.Add(result.Value);
 
                 if (result.Value.offset <= 0)
-                    changesToSendToUI.Add(result.Value);
+                    displayedEffects.Add(result.Value);
+                    //changesToSendToUI.Add(result.Value);
             }
             else
-                changesToSendToUI.Add(change);
+                displayedEffects.Add(change);
+                //changesToSendToUI.Add(change);
         }
-        EndUpdate(changesToSendToUI);
+        EndUpdate();
+        //EndUpdate(changesToSendToUI);
     }
 
     /// <summary>
@@ -266,19 +291,19 @@ public class GameController : MonoBehaviour
     /// </summary>
     private void ApplyRegisteredEffects(int currentPlayer)
     {
-        List<VariableChange> changesToSendToUI = new List<VariableChange>();
+        //List<VariableChange> changesToSendToUI = new List<VariableChange>();
         for (int i = registeredEffects.Count - 1; i >= 0; i--)
         {
             VariableChange change = registeredEffects[i];
-
-            if ((change.variable == VarType.ability || change.variable == VarType.damage) && change.player != currentPlayer)
-                continue;
 
             if (!AppManager.INSTANCE.characterData[change.player].isAlive)
             {
                 registeredEffects.RemoveAt(i);
                 continue;
             }
+
+            if ((change.variable == VarType.ability || change.variable == VarType.damage) && change.player != currentPlayer)
+                continue;
 
             VariableChange? result = ApplyVarChange(change);
             if (result.HasValue)
@@ -287,19 +312,22 @@ public class GameController : MonoBehaviour
 
                 if (result.Value.offset <= 0 && change.offset <= 0)
                 {
-                    changesToSendToUI.Add(result.Value);
+                    displayedEffects.Add(result.Value);
+                    //changesToSendToUI.Add(result.Value);
                 }
             }
             else
             {
                 registeredEffects.RemoveAt(i);
-                changesToSendToUI.Add(change);
+                displayedEffects.Add(change);
+                //changesToSendToUI.Add(change);
 
                 Debug.Log("remove it");
 
             }
         }
-        EndUpdate(changesToSendToUI);
+        EndUpdate();
+        //EndUpdate(changesToSendToUI);
     }
 
     public VariableChange? ApplyVarChange(VariableChange varChange)
