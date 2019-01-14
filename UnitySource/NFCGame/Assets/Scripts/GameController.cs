@@ -80,11 +80,20 @@ public class GameController : MonoBehaviour
         currentRound++;
         UIController.SetRound(currentRound);
 
-        foreach(PlayerData character in AppManager.INSTANCE.characterData)
+        for(int i = 0; i < AppManager.INSTANCE.characterData.Count; i++)
         {
-            if(character.isAlive)
+            PlayerData character = AppManager.INSTANCE.characterData[i];
+
+            if (character.isAlive)
+            {
                 character.currentAbilityPoints = character.maxAbilityPoints;
-                //show increase in displayed effects
+                VariableChange ptChange = new VariableChange();
+                ptChange.player = i;
+                ptChange.variable = VarType.ability;
+                ptChange.change = character.maxAbilityPoints;
+
+                displayedEffects.Add(ptChange);
+            }
         }
     }
 
@@ -152,8 +161,6 @@ public class GameController : MonoBehaviour
 
         displayedEffects.Add(ptChange);
 
-        //add it to displayed effects
-
         JArray fxArray = (JArray)e.GetValue("fx");
         string name = e.GetValue("name").ToString();
         string desc = e.GetValue("desc").ToString();
@@ -166,7 +173,6 @@ public class GameController : MonoBehaviour
     /// <param name="changes">List of effects that were applied this update, used for UI</param>
     private void EndUpdate()
     {
-        //UIController.ShowVarChanges(changes);
         UIController.ShowVarChanges(new List<VariableChange>(displayedEffects));
         UIController.UpdateStatusEffects(registeredEffects);
 
@@ -253,12 +259,12 @@ public class GameController : MonoBehaviour
     }
 
     /// <summary>
+    /// Called when the parsing coroutine has completed
     /// Applies the given list of varchanges or stores it in the register for future application
     /// </summary>
     /// <param name="changes">The list of new VariableChanges</param>
     public void ApplyParsedEffects(List<VariableChange> changes)
     {
-        //List<VariableChange> changesToSendToUI = new List<VariableChange>();
         for(int i = 0; i < changes.Count; i++)
         {
             VariableChange change = changes[i];
@@ -275,14 +281,11 @@ public class GameController : MonoBehaviour
 
                 if (result.Value.offset <= 0)
                     displayedEffects.Add(result.Value);
-                    //changesToSendToUI.Add(result.Value);
             }
             else
                 displayedEffects.Add(change);
-                //changesToSendToUI.Add(change);
         }
         EndUpdate();
-        //EndUpdate(changesToSendToUI);
     }
 
     /// <summary>
@@ -291,7 +294,6 @@ public class GameController : MonoBehaviour
     /// </summary>
     private void ApplyRegisteredEffects(int currentPlayer)
     {
-        //List<VariableChange> changesToSendToUI = new List<VariableChange>();
         for (int i = registeredEffects.Count - 1; i >= 0; i--)
         {
             VariableChange change = registeredEffects[i];
@@ -313,21 +315,15 @@ public class GameController : MonoBehaviour
                 if (result.Value.offset <= 0 && change.offset <= 0)
                 {
                     displayedEffects.Add(result.Value);
-                    //changesToSendToUI.Add(result.Value);
                 }
             }
             else
             {
                 registeredEffects.RemoveAt(i);
                 displayedEffects.Add(change);
-                //changesToSendToUI.Add(change);
-
-                Debug.Log("remove it");
-
             }
         }
         EndUpdate();
-        //EndUpdate(changesToSendToUI);
     }
 
     public VariableChange? ApplyVarChange(VariableChange varChange)
@@ -467,6 +463,7 @@ public struct AbilityData
 [System.Serializable]
 public struct VariableChange
 {
+    public int givenByPlayer;
     public int player;
     public VarType variable;
     public bool additive;
