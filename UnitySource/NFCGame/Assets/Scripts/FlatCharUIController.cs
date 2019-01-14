@@ -29,8 +29,10 @@ public class FlatCharUIController : MonoBehaviour
         }
         set
         {
+            bool prevValue = highlighted;
             highlighted = value;
-            UpdateHighLight();
+            if(prevValue != highlighted)
+                UpdateHighLight();
         }
     }
 

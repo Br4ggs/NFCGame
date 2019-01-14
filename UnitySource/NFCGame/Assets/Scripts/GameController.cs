@@ -236,6 +236,7 @@ public class GameController : MonoBehaviour
                 JObject varChangeObj = varChange.ToObject<JObject>();
                 VariableChange changeData = new VariableChange();
 
+                changeData.givenByPlayer = currentPlayer;
                 changeData.additive = (varChangeObj.GetValue("type").ToString() == "additive");
                 changeData.change = int.Parse(varChangeObj.GetValue("chng").ToString());
                 changeData.offset = int.Parse(varChangeObj.GetValue("offst").ToString());
@@ -340,8 +341,22 @@ public class GameController : MonoBehaviour
         switch (varChange.variable)
         {
             case VarType.health:
-                AppManager.INSTANCE.characterData[varChange.player].AddToHealth(varChange.change, false);
-                //send something back to check player state
+                {
+                    int status = AppManager.INSTANCE.characterData[varChange.player].AddToHealth(varChange.change, false);
+                    //send something back to check player state
+                    if(status == -1 || status == 0)
+                    {
+                        Debug.Log("player " + varChange.player + " was killed by " + varChange.givenByPlayer);
+                        AppManager.INSTANCE.characterData[varChange.givenByPlayer].AddToVictoryPoints(1);
+
+                        VariableChange change = new VariableChange();
+                        change.player = varChange.givenByPlayer;
+                        change.variable = VarType.victory;
+                        change.change = 1;
+
+                        displayedEffects.Add(change);
+                    }
+                }
                 break;
             case VarType.victory:
                 AppManager.INSTANCE.characterData[varChange.player].AddToVictoryPoints(varChange.change);
