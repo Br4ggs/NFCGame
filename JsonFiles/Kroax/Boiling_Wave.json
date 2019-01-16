@@ -1,0 +1,21 @@
+{
+  "type": "Ability",
+  "name": "Boiling Wave",
+  "desc": "Push away every hero by 2 spaces and deal 1 damage.",
+  "ptCst": 1,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "multiple",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": -1,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}

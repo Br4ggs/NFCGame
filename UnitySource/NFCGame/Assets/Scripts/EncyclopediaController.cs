@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 /// </summary>
 public class EncyclopediaController : MonoBehaviour
 {
+    public ImageManager imgManager;
     public Text nameTxt;
     public Text descriptionTxt;
     public Text typeTxt;
@@ -51,6 +52,9 @@ public class EncyclopediaController : MonoBehaviour
         messageBox.transform.localPosition = offScreenPos;
 
         nameTxt.text = e.GetValue("name").ToString();
+
+        Sprite img = imgManager.FindImage(e.GetValue("name").ToString());
+        messageBox.transform.Find("Visualiser").GetComponent<Image>().sprite = img;
 
         JToken desc = e.GetValue("description");
         if (desc == null)

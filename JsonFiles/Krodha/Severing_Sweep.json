@@ -1,0 +1,21 @@
+{
+  "type": "Ability",
+  "name": "Severing Sweep",
+  "desc": "Berserker swipes with his mighty blade damaging people in a cone in front of him dealing 2 damage.",
+  "ptCst": 2,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "multiple",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": -2,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}

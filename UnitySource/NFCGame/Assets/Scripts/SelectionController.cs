@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 // not gonna lie, this is hacky. I'll come back to this later to fix this
 public class SelectionController : MonoBehaviour
 {
+    public ImageManager imgManager;
     public PopupDialog messageBox;
     bool dialogUp;
     public GameObject[] playerProfiles;
@@ -61,6 +62,8 @@ public class SelectionController : MonoBehaviour
         AppManager.INSTANCE.characterData.Add(data);
         GameObject profile = playerProfiles[AppManager.INSTANCE.characterData.Count - 1];
         profile.transform.Find("Name").GetComponent<Text>().text = data.name;
+        Sprite img = imgManager.FindImage(data.name);
+        profile.transform.Find("Image").GetComponent<Image>().sprite = img;
         StartCoroutine(LerpToCoRoutine(profile, new Vector3(profile.transform.localPosition.x, 0, profile.transform.localPosition.z), true, true, false));
     }
 
@@ -94,6 +97,7 @@ public class SelectionController : MonoBehaviour
 
                     profile.transform.localPosition = nextProfile.transform.localPosition;
                     profile.transform.Find("Name").GetComponent<Text>().text = nextProfile.transform.Find("Name").GetComponent<Text>().text;
+                    profile.transform.Find("Image").GetComponent<Image>().sprite = nextProfile.transform.Find("Image").GetComponent<Image>().sprite;
 
                     StartCoroutine(LerpToCoRoutine(profile, destination, true, true, false));
                     nextProfile.SetActive(false);

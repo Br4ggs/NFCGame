@@ -1,0 +1,20 @@
+{
+  "type": "Ability",
+  "name": "Mending Salve",
+  "desc": "Heal yourself for 2 HP.",
+  "ptCst": 3,
+  "fx": [
+    {
+      "trgts": "user",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": 2,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}

@@ -42,7 +42,7 @@ public class FlatCharUIController : MonoBehaviour
         defaultBackgroundColor = background.color;
         canvas = GameObject.Find("Canvas").GetComponent<RectTransform>();
         charName = transform.Find("Name").GetComponent<Text>();
-        lives = transform.Find("Lives").GetComponent<Text>();
+        lives = transform.Find("LivesCounter").GetComponent<Text>();
         hitPoints = transform.Find("HealthCounter").GetComponent<Text>();
         abilityPoints = transform.Find("AbilityCounter").GetComponent<Text>();
         victoryPoints = transform.Find("VictoryCounter").GetComponent<Text>();

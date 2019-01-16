@@ -1,0 +1,21 @@
+{
+  "type": "Ability",
+  "name": "Blink Dagger",
+  "desc": "Pick a space in a line up to 4 spaces away and teleport to there. If an enemy is in that space deal 2 damage to that enemy.",
+  "ptCst": 5,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "one",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": -2,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "type": "Ability",
+  "name": "Tongue Lash",
+  "desc": "Deal 3 damage to an enemy up to 3 spaces away.",
+  "ptCst": 3,
+  "fx": [
+    {
+      "trgts": "enemy",
+      "trgtType": "one",
+      "varchng": [
+        {
+          "var": "health",
+          "type": "additive",
+          "chng": -3,
+          "offst": 0,
+          "trns": 1
+        }
+      ]
+    }
+  ]
+}
